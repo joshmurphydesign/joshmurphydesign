@@ -1,16 +1,16 @@
-### Hi there 👋
+# Josh Murphy
 
-<!--
-**joshmurphydesign/joshmurphydesign** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Short bio...
 
-Here are some ideas to get you started:
+> All my life I have been determined to succeed in my education and have thrived off of an overwhelming amount of creativity. This is what makes me line up very well in the world of Design.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## Skills
+* User Experience Design
+* Web Design
+* Graphic Design
+* Video Editing
+
+## Programming Languages
+* HTML
+* CSS
+* JS
