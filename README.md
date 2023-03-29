@@ -9,8 +9,12 @@ Short bio...
 * Web Design
 * Graphic Design
 * Video Editing
+* Product Design
+* Brand Development
 
 ## Programming Languages
 * HTML
 * CSS
 * JS
+* PYTHON
+* JAVA
