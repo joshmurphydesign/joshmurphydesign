@@ -1,6 +1,5 @@
-
-# Josh Murphy<img width="460" alt="Screenshot 2024-01-20 at 11 00 02 AM" src="https://github.com/joshmurphydesign/joshmurphydesign/assets/85370003/59e8e053-7f86-486a-a815-03b3aca96109">
-
+<img width="460" alt="Screenshot 2024-01-20 at 11 00 02 AM" src="https://github.com/joshmurphydesign/joshmurphydesign/assets/85370003/59e8e053-7f86-486a-a815-03b3aca96109">
+# Josh Murphy
 
 Short bio...
 
