@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useData } from "@/lib/data-context";
+import { metricIsEntryBased } from "@/lib/metric-presets";
 import type { Goal } from "@/lib/types";
 import { categoryEmoji, categoryLabel, cn, isToday, modeLabel } from "@/lib/utils";
 import { Pill } from "@/components/ui/Pill";
@@ -41,7 +42,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <StreakBadge days={goal.streak} />
+          {!metricIsEntryBased(goal.metric.type) && <StreakBadge days={goal.streak} />}
           {me && goal.metric.type === "binary" && (
             <button
               onClick={(e) => {

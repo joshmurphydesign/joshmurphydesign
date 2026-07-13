@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useAuth } from "./auth-context";
-import { computeProgress, isStepsGoal, metricIsCumulative, metricNeedsBaseline } from "./metric-presets";
+import { computeProgress, isStepsGoal, metricAllowsRepeatLogging, metricIsCumulative, metricIsEntryBased, metricNeedsBaseline } from "./metric-presets";
 import {
   ACTIVITY_HISTORY,
   COMPETITIONS,
@@ -398,15 +398,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (!me) return prev;
 
         const metric = goal.metric;
-        // Cumulative goals (steps, reps, distance...) are naturally multi-session —
-        // you might log a morning run and an evening run the same day. Every other
-        // metric is a once-daily snapshot or habit check, so it keeps the daily cap.
         const isCumulative = metricIsCumulative(metric.type);
+        const isEntryBased = metricIsEntryBased(metric.type);
+        // Cumulative goals (steps, reps, distance...) are naturally multi-session, and
+        // entry-based goals (a score, a lift, a time — a specific number you're working
+        // toward) are attempts logged whenever they happen, not a daily habit. Binary is
+        // the only metric that's a true once-a-day check-in, so it keeps the daily cap.
         const alreadyLoggedToday = !!me.lastLoggedAt && isSameDay(me.lastLoggedAt, now);
-        if (alreadyLoggedToday && !isCumulative) return prev;
+        if (alreadyLoggedToday && !metricAllowsRepeatLogging(metric.type)) return prev;
 
         let nextCurrentValue = me.currentValue;
         let nextProgress: number;
+        let isNewBest = false;
         if (metric.type === "binary") {
           const step = Math.max(1, Math.round(100 / goal.durationDays));
           nextProgress = Math.min(100, me.progress + step);
@@ -414,17 +417,25 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           nextCurrentValue = (me.currentValue ?? 0) + (value ?? 0);
           nextProgress = computeProgress(metric, { progress: me.progress, startValue: me.startValue, currentValue: nextCurrentValue });
         } else {
-          nextCurrentValue = value ?? me.currentValue ?? me.startValue ?? 0;
+          // Entry-based: each log is an attempt — only a new high (increase) or new low
+          // (decrease) actually moves your number. A worse attempt still shows up in
+          // activity, but it doesn't undo your personal best or your progress.
+          const prevBest = me.currentValue ?? me.startValue ?? 0;
+          const attempt = value ?? prevBest;
+          nextCurrentValue = metric.type === "increase" ? Math.max(attempt, prevBest) : Math.min(attempt, prevBest);
+          isNewBest = nextCurrentValue !== prevBest;
           nextProgress = computeProgress(metric, { progress: me.progress, startValue: me.startValue, currentValue: nextCurrentValue });
         }
 
-        // A same-day repeat log (cumulative only) doesn't move the streak at all —
-        // it neither extends it again nor resets it, since the day is already counted.
-        const nextStreak = alreadyLoggedToday
+        // Entry-based goals don't carry a day-streak — you don't attempt a new 1RM or
+        // golf round daily, so there's no "day in a row" to track or protect.
+        const nextStreak = isEntryBased
           ? goal.streak
-          : !!me.lastLoggedAt && isYesterday(me.lastLoggedAt, now)
-            ? goal.streak + 1
-            : 1;
+          : alreadyLoggedToday
+            ? goal.streak
+            : !!me.lastLoggedAt && isYesterday(me.lastLoggedAt, now)
+              ? goal.streak + 1
+              : 1;
 
         const nowIso = new Date(now).toISOString();
         const updatedParticipants = goal.participants.map((p) =>
@@ -434,7 +445,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           updatedParticipants.reduce((sum, p) => sum + p.progress, 0) / updatedParticipants.length
         );
 
-        const milestone = !alreadyLoggedToday && nextStreak > 0 && nextStreak % 7 === 0;
+        // Streak-freeze milestones only make sense for day-streaks — entry-based
+        // goals have no daily obligation to protect.
+        const milestone = !isEntryBased && !alreadyLoggedToday && nextStreak > 0 && nextStreak % 7 === 0;
         if (milestone) adjustFreezes(1);
 
         const hitTarget = nextProgress >= 100 && me.progress < 100;
@@ -463,18 +476,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             ? `Hit the target on ${goal.title}`
             : milestone
               ? `${nextStreak}-day streak on ${goal.title}`
-              : isHealthSync && providerLabel
-                ? `${providerEmoji} ${providerLabel} synced ${goal.title}`
-                : alreadyLoggedToday
-                  ? `Added more to ${goal.title}`
-                  : `Logged progress on ${goal.title}`,
+              : isEntryBased
+                ? isNewBest
+                  ? `New best on ${goal.title}: ${nextCurrentValue} ${goal.unit}`
+                  : `Logged an attempt on ${goal.title}`
+                : isHealthSync && providerLabel
+                  ? `${providerEmoji} ${providerLabel} synced ${goal.title}`
+                  : alreadyLoggedToday
+                    ? `Added more to ${goal.title}`
+                    : `Logged progress on ${goal.title}`,
           body: hitTarget
             ? "Target complete. Show up, stand out — mission accomplished."
             : milestone
               ? `${nextStreak} days in a row. Earned a streak freeze for staying consistent.`
-              : valueLabel
-                ? `${isHealthSync ? "Auto-synced" : alreadyLoggedToday ? "Another entry" : `Day ${nextStreak} logged`} — ${valueLabel}. ${nextProgress}% of the way there.`
-                : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`,
+              : isEntryBased
+                ? isNewBest
+                  ? `New personal best. ${nextProgress}% of the way there.`
+                  : `Attempt logged — best stays ${nextCurrentValue} ${goal.unit}.`
+                : valueLabel
+                  ? `${isHealthSync ? "Auto-synced" : alreadyLoggedToday ? "Another entry" : `Day ${nextStreak} logged`} — ${valueLabel}. ${nextProgress}% of the way there.`
+                  : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`,
           statValue: `${nextProgress}%`,
           statLabel: "progress",
           createdAt: nowIso,
@@ -494,8 +515,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             {
               id: `h-${now}`,
               userId: "me",
-              label: isHealthSync && providerLabel ? `Auto-synced from ${providerLabel}` : alreadyLoggedToday ? "Logged more progress" : "Logged progress",
-              detail: `${goal.title} — day ${nextStreak}`,
+              label: isEntryBased
+                ? isNewBest
+                  ? "Logged a new best"
+                  : "Logged an attempt"
+                : isHealthSync && providerLabel
+                  ? `Auto-synced from ${providerLabel}`
+                  : alreadyLoggedToday
+                    ? "Logged more progress"
+                    : "Logged progress",
+              detail: isEntryBased ? `${goal.title} — ${nextCurrentValue} ${goal.unit}` : `${goal.title} — day ${nextStreak}`,
               createdAt: nowIso,
             },
             ...prev.activity,

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { pointsForPlacement, useData } from "@/lib/data-context";
-import { isStepsGoal, metricIsCumulative, metricNeedsBaseline, metricNeedsNumericLog } from "@/lib/metric-presets";
+import { isStepsGoal, metricIsCumulative, metricIsEntryBased, metricNeedsBaseline, metricNeedsNumericLog } from "@/lib/metric-presets";
 import { computeStakePayout, PAYMENT_PROVIDERS, PAYMENT_PROVIDER_META, paymentLink } from "@/lib/payments";
 import { useUserMap } from "@/lib/people";
 import { TopBar } from "@/components/shell/TopBar";
@@ -54,7 +54,8 @@ export default function GoalDetailPage() {
   const iAmIn = !!me;
   const iAmOwner = !!me?.isOwner;
   const loggedToday = isToday(me?.lastLoggedAt);
-  const streakAtRisk = iAmIn && !!me?.lastLoggedAt && !loggedToday && goal.streak > 0;
+  const isEntryBased = metricIsEntryBased(goal.metric.type);
+  const streakAtRisk = !isEntryBased && iAmIn && !!me?.lastLoggedAt && !loggedToday && goal.streak > 0;
   const sortedParticipants = [...goal.participants].sort((a, b) => b.progress - a.progress);
   const relatedPosts = posts
     .filter((p) => p.goalId === goal.id)
@@ -73,10 +74,11 @@ export default function GoalDetailPage() {
   const metric = goal.metric;
   const needsNumericLog = metricNeedsNumericLog(metric.type);
   const needsBaseline = metricNeedsBaseline(metric.type);
-  // Cumulative goals (steps, reps, distance...) are naturally multi-session, so
-  // logging again today just adds another entry instead of being locked out.
+  // Cumulative goals (steps, reps, distance...) are naturally multi-session, and
+  // entry-based goals (a score, a lift, a time) are attempts logged whenever they
+  // happen — neither is locked to one log per day the way a daily check-in is.
   const isCumulative = metricIsCumulative(metric.type);
-  const canLogMore = isCumulative || !loggedToday;
+  const canLogMore = isCumulative || isEntryBased || !loggedToday;
   const stepsGoal = isStepsGoal(goal);
   const healthProviderLabel = health?.provider === "apple" ? "Apple Health" : health?.provider === "samsung" ? "Samsung Health" : undefined;
   const healthProviderEmoji = health?.provider === "apple" ? "\u{1F34E}" : "\u{231A}";
@@ -132,7 +134,11 @@ export default function GoalDetailPage() {
       <div className="grid grid-cols-3 gap-3 px-5">
         <MiniStat label="Target" value={goal.target} sub={goal.unit} />
         <MiniStat label="Days left" value={String(daysLeft)} sub={`of ${goal.durationDays}`} />
-        <MiniStat label="Streak" value={String(goal.streak)} sub="days" />
+        {isEntryBased ? (
+          <MiniStat label="Last entry" value={me?.lastLoggedAt ? timeAgo(me.lastLoggedAt) : "—"} sub={me?.lastLoggedAt ? "" : "not yet"} />
+        ) : (
+          <MiniStat label="Streak" value={String(goal.streak)} sub="days" />
+        )}
       </div>
 
       {isCompetitive && (
@@ -278,7 +284,9 @@ export default function GoalDetailPage() {
                 <p className="text-xs text-chalk-500">
                   {metric.type === "cumulative"
                     ? `${formatValue(me.currentValue ?? 0)} / ${formatValue(metric.targetValue)} ${goal.unit} logged`
-                    : `Currently ${formatValue(me.currentValue ?? me.startValue ?? 0)} ${goal.unit} · started at ${formatValue(me.startValue ?? 0)} ${goal.unit}`}
+                    : isEntryBased
+                      ? `Personal best: ${formatValue(me.currentValue ?? me.startValue ?? 0)} ${goal.unit} · started at ${formatValue(me.startValue ?? 0)} ${goal.unit}`
+                      : `Currently ${formatValue(me.currentValue ?? me.startValue ?? 0)} ${goal.unit} · started at ${formatValue(me.startValue ?? 0)} ${goal.unit}`}
                 </p>
               )}
               {showManualFields ? (
@@ -289,7 +297,7 @@ export default function GoalDetailPage() {
                       inputMode="decimal"
                       value={logValue}
                       onChange={(e) => setLogValue(e.target.value)}
-                      placeholder={isCumulative ? `Add ${goal.unit} logged today` : `Today's ${goal.unit}`}
+                      placeholder={isCumulative ? `Add ${goal.unit} logged today` : isEntryBased ? `New ${goal.unit} attempt` : `Today's ${goal.unit}`}
                       className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
                     />
                   )}
@@ -304,6 +312,8 @@ export default function GoalDetailPage() {
                       <>
                         <IconCheck className="h-4 w-4" /> Logged today
                       </>
+                    ) : isEntryBased ? (
+                      "Log an entry"
                     ) : isCumulative && loggedToday ? (
                       "Add more today"
                     ) : (
@@ -391,7 +401,7 @@ export default function GoalDetailPage() {
             );
           })}
         </div>
-        {iAmIn && <StreakBadge days={goal.streak} className="self-start" />}
+        {iAmIn && !isEntryBased && <StreakBadge days={goal.streak} className="self-start" />}
       </div>
 
       <div className="flex flex-col gap-3">

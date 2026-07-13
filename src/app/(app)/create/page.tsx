@@ -341,6 +341,12 @@ export default function CreateGoalPage() {
                 Everyone who joins logs their own numbers — progress bars reflect personal starting points,
                 not a shared count.
               </p>
+              {needsBaseline && (
+                <p className="text-xs text-chalk-500">
+                  Log a new number anytime you attempt it — no daily check-ins required. We&apos;ll track your
+                  personal best automatically.
+                </p>
+              )}
             </div>
           )}
           <div className="flex flex-col gap-1.5">

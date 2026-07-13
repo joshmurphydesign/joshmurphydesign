@@ -163,3 +163,16 @@ export function metricNeedsBaseline(type: MetricType): boolean {
 export function metricIsCumulative(type: MetricType): boolean {
   return type === "cumulative";
 }
+/**
+ * A specific number you're working toward (1-rep max, golf score, race time) rather than
+ * a running total or a daily habit. Each log is an attempt, not a check-in — you don't
+ * PR every day, so these carry no day-streak and only a new high (increase) or new low
+ * (decrease) actually moves your number.
+ */
+export function metricIsEntryBased(type: MetricType): boolean {
+  return type === "increase" || type === "decrease";
+}
+/** Metric types where multiple logs per day are meaningful — cumulative running totals and entry/attempt-based numbers — as opposed to binary's once-a-day check-in. */
+export function metricAllowsRepeatLogging(type: MetricType): boolean {
+  return metricIsCumulative(type) || metricIsEntryBased(type);
+}
