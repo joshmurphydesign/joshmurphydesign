@@ -51,6 +51,7 @@ export const USERS: User[] = [
     location: "Austin, TX",
     points: 1820,
     freezes: 1,
+    paymentHandles: [{ provider: "cashapp", handle: "AndreWalsh" }],
   },
   {
     id: "u-sam",
@@ -83,6 +84,7 @@ export const USERS: User[] = [
     location: "Brooklyn, NY",
     points: 2450,
     freezes: 3,
+    paymentHandles: [{ provider: "paypal", handle: "priyalifts" }],
   },
   {
     id: "u-jonah",
@@ -99,6 +101,7 @@ export const USERS: User[] = [
     location: "Chicago, IL",
     points: 890,
     freezes: 1,
+    paymentHandles: [{ provider: "venmo", handle: "jonah-ricci" }],
   },
   {
     id: "u-tasha",
@@ -217,6 +220,7 @@ export const GOALS: Goal[] = [
     streak: 9,
     coverGradient: "linear-gradient(135deg,#ffc23d,#ff3b5c)",
     stake: "🥤 Loser buys smoothies for the group",
+    stakeAmount: 15,
     metric: { type: "cumulative", targetValue: 300000 },
     participants: [
       { userId: "u-jonah", progress: 100, joinedAt: daysAgo(9), isOwner: true, currentValue: 300000 },

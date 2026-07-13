@@ -104,6 +104,7 @@ interface DataContextValue {
     durationDays: number;
     inviteeIds: string[];
     stake?: string;
+    stakeAmount?: number;
     metric: GoalMetric;
     startingValue?: number;
   }) => Goal;
@@ -112,6 +113,7 @@ interface DataContextValue {
   logProgress: (goalId: string, value?: number, source?: "manual" | "health") => void;
   spendStreakFreeze: (goalId: string) => void;
   settleGoal: (goalId: string) => void;
+  markStakePaid: (goalId: string) => void;
   toggleFollow: (userId: string) => void;
   sendMessage: (otherUserId: string, text: string) => void;
   markThreadRead: (otherUserId: string) => void;
@@ -254,6 +256,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       durationDays: number;
       inviteeIds: string[];
       stake?: string;
+      stakeAmount?: number;
       metric: GoalMetric;
       startingValue?: number;
     }): Goal => {
@@ -276,6 +279,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         streak: 0,
         coverGradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)],
         stake: params.stake || undefined,
+        stakeAmount: params.stakeAmount && params.stakeAmount > 0 ? params.stakeAmount : undefined,
         metric: params.metric,
         participants: [
           {
@@ -655,6 +659,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [adjustPoints]
   );
 
+  const markStakePaid = useCallback((goalId: string) => {
+    setState((prev) => ({
+      ...prev,
+      goals: prev.goals.map((g) => {
+        if (g.id !== goalId) return g;
+        const paid = g.paidByUserIds ?? [];
+        return {
+          ...g,
+          paidByUserIds: paid.includes("me") ? paid.filter((id) => id !== "me") : [...paid, "me"],
+        };
+      }),
+    }));
+  }, []);
+
   const toggleFollow = useCallback((userId: string) => {
     setState((prev) => ({
       ...prev,
@@ -726,6 +744,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       logProgress,
       spendStreakFreeze,
       settleGoal,
+      markStakePaid,
       toggleFollow,
       sendMessage,
       markThreadRead,
@@ -746,6 +765,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       logProgress,
       spendStreakFreeze,
       settleGoal,
+      markStakePaid,
       toggleFollow,
       sendMessage,
       markThreadRead,

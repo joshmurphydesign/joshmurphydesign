@@ -30,6 +30,14 @@ export interface GoalMetric {
   targetValue: number;
 }
 
+export type PaymentProvider = "venmo" | "paypal" | "cashapp";
+
+export interface PaymentHandle {
+  provider: PaymentProvider;
+  /** Public username/cashtag only — never a real payment credential, token, or account number. */
+  handle: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -45,6 +53,8 @@ export interface User {
   location?: string;
   points?: number;
   freezes?: number;
+  /** Public payment handles for collecting cash-stake payouts. */
+  paymentHandles?: PaymentHandle[];
 }
 
 export interface GoalParticipant {
@@ -79,6 +89,10 @@ export interface Goal {
   metric: GoalMetric;
   /** What's on the line — flavor text, e.g. "☕ Loser buys coffee". No points cost to join. */
   stake?: string;
+  /** Dollar amount each non-winning participant owes the winner once settled. Paid peer-to-peer outside Ascend. */
+  stakeAmount?: number;
+  /** userIds who have self-reported paying their share — an honor-system tracker, not a verified transaction. */
+  paidByUserIds?: string[];
   settledAt?: string;
   winnerId?: string;
   isPublic?: boolean;

@@ -46,7 +46,7 @@ export default function MyProfilePage() {
         </div>
       </div>
       <ProfileView person={user} />
-      <div className="px-5">
+      <div className="flex flex-col gap-2.5 px-5">
         <button
           onClick={() => router.push("/profile/health")}
           className="card-surface flex w-full items-center gap-3 rounded-2xl p-4 text-left"
@@ -61,6 +61,24 @@ export default function MyProfilePage() {
             </p>
           </div>
           {health && <Pill tone="volt">On</Pill>}
+          <IconChevronRight className="h-4 w-4 shrink-0 text-chalk-700" />
+        </button>
+        <button
+          onClick={() => router.push("/profile/payments")}
+          className="card-surface flex w-full items-center gap-3 rounded-2xl p-4 text-left"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/8 text-lg">
+            {(user.paymentHandles?.length ?? 0) > 0 ? "\u{1F4B8}" : "\u{2795}"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-chalk-100">Payment methods</p>
+            <p className="text-xs text-chalk-500">
+              {(user.paymentHandles?.length ?? 0) > 0
+                ? `${user.paymentHandles?.length} linked for stake payouts`
+                : "Link Venmo, PayPal, or Cash App"}
+            </p>
+          </div>
+          {(user.paymentHandles?.length ?? 0) > 0 && <Pill tone="volt">{user.paymentHandles?.length}</Pill>}
           <IconChevronRight className="h-4 w-4 shrink-0 text-chalk-700" />
         </button>
       </div>

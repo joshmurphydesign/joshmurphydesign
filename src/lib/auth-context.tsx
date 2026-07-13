@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { GoalCategory, User } from "./types";
+import type { GoalCategory, PaymentHandle, User } from "./types";
 
 const SESSION_KEY = "ascend_session_v1";
 
@@ -23,6 +23,7 @@ interface AuthContextValue {
   signup: (params: { name: string; email: string; focus: GoalCategory[] }) => MeProfile;
   logout: () => void;
   updateProfile: (params: { name: string; bio: string; focus: GoalCategory[]; avatarColor: string }) => void;
+  updatePaymentHandles: (handles: PaymentHandle[]) => void;
   adjustPoints: (delta: number) => void;
   adjustFreezes: (delta: number) => void;
 }
@@ -130,6 +131,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const updatePaymentHandles = useCallback((handles: PaymentHandle[]) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next: MeProfile = { ...prev, paymentHandles: handles };
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const adjustPoints = useCallback((delta: number) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -149,8 +159,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isHydrated, login, signup, logout, updateProfile, adjustPoints, adjustFreezes }),
-    [user, isHydrated, login, signup, logout, updateProfile, adjustPoints, adjustFreezes]
+    () => ({ user, isHydrated, login, signup, logout, updateProfile, updatePaymentHandles, adjustPoints, adjustFreezes }),
+    [user, isHydrated, login, signup, logout, updateProfile, updatePaymentHandles, adjustPoints, adjustFreezes]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

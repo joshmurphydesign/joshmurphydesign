@@ -69,6 +69,7 @@ export default function CreateGoalPage() {
   const [inviteeIds, setInviteeIds] = useState<string[]>([]);
   const [stakePreset, setStakePreset] = useState<string | null>(null);
   const [customStake, setCustomStake] = useState("");
+  const [stakeAmount, setStakeAmount] = useState("");
 
   const [trackingKey, setTrackingKey] = useState("consistency");
   const [customType, setCustomType] = useState<MetricType>("cumulative");
@@ -131,6 +132,7 @@ export default function CreateGoalPage() {
       durationDays,
       inviteeIds,
       stake: STAKE_MODES.includes(mode) ? finalStake || undefined : undefined,
+      stakeAmount: STAKE_MODES.includes(mode) && stakeAmount.trim() ? Number(stakeAmount) : undefined,
       metric,
       startingValue: needsBaseline ? Number(startingValue) || 0 : undefined,
     });
@@ -421,6 +423,27 @@ export default function CreateGoalPage() {
                 No points required to join — everyone just needs to hold up their end. Points are earned
                 automatically for the win.
               </p>
+              <label className="flex flex-col gap-1.5 pt-1">
+                <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">
+                  Cash stake <span className="text-chalk-700">(optional)</span>
+                </span>
+                <div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 focus-within:border-ascend-blue">
+                  <span className="text-[15px] font-semibold text-chalk-500">$</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(e.target.value)}
+                    placeholder="10"
+                    className="flex-1 bg-transparent text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700"
+                  />
+                  <span className="text-xs text-chalk-700">per person</span>
+                </div>
+                <p className="text-xs text-chalk-500">
+                  Ascend doesn&apos;t process payments — once settled, whoever doesn&apos;t win pays the winner
+                  directly via a linked Venmo, PayPal, or Cash App.
+                </p>
+              </label>
             </div>
           )}
         </div>
@@ -494,12 +517,16 @@ export default function CreateGoalPage() {
             {needsBaseline && (
               <SummaryRow label="Your starting point" value={`${startingValue || "0"} ${activeUnit}`} />
             )}
-            {STAKE_MODES.includes(mode) && finalStake && (
+            {STAKE_MODES.includes(mode) && (finalStake || stakeAmount.trim()) && (
               <div className="card-surface col-span-2 rounded-2xl p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">
                   What&apos;s on the line
                 </p>
-                <p className="mt-0.5 font-bold text-chalk-100">{finalStake}</p>
+                <p className="mt-0.5 font-bold text-chalk-100">
+                  {finalStake}
+                  {finalStake && stakeAmount.trim() ? " · " : ""}
+                  {stakeAmount.trim() ? `$${stakeAmount} per person` : ""}
+                </p>
               </div>
             )}
           </div>

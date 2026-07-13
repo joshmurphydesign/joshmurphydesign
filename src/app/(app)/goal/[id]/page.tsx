@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { pointsForPlacement, useData } from "@/lib/data-context";
 import { isStepsGoal, metricIsCumulative, metricNeedsBaseline, metricNeedsNumericLog } from "@/lib/metric-presets";
+import { computeStakePayout, PAYMENT_PROVIDERS, PAYMENT_PROVIDER_META, paymentLink } from "@/lib/payments";
 import { useUserMap } from "@/lib/people";
 import { TopBar } from "@/components/shell/TopBar";
 import { Pill } from "@/components/ui/Pill";
@@ -31,7 +32,7 @@ const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
 export default function GoalDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { goals, posts, health, joinGoal, logProgress, spendStreakFreeze, settleGoal } = useData();
+  const { goals, posts, health, joinGoal, logProgress, spendStreakFreeze, settleGoal, markStakePaid } = useData();
   const userMap = useUserMap();
 
   const goal = goals.find((g) => g.id === params.id);
@@ -62,6 +63,12 @@ export default function GoalDetailPage() {
   const winner = goal.winnerId ? userMap[goal.winnerId] : undefined;
   const isCompetitive = goal.mode === "challenge" || goal.mode === "duel";
   const winnerPoints = pointsForPlacement(goal.mode, 1);
+
+  const payout = computeStakePayout(goal);
+  const iAmWinner = !!payout && payout.winnerId === "me";
+  const iOwe = !!payout && !iAmWinner && payout.payerIds.includes("me");
+  const iHavePaid = goal.paidByUserIds?.includes("me") ?? false;
+  const winnerPaymentHandles = payout ? userMap[payout.winnerId]?.paymentHandles ?? [] : [];
 
   const metric = goal.metric;
   const needsNumericLog = metricNeedsNumericLog(metric.type);
@@ -133,8 +140,14 @@ export default function GoalDetailPage() {
           <div className="card-surface-raised flex items-center justify-between gap-3 rounded-2xl p-4">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">What&apos;s on the line</p>
-              <p className="mt-0.5 font-bold text-chalk-100">{goal.stake || "Bragging rights"}</p>
-              <p className="mt-1 text-xs text-chalk-500">Winner earns {winnerPoints} pts automatically.</p>
+              <p className="mt-0.5 font-bold text-chalk-100">
+                {goal.stake || "Bragging rights"}
+                {goal.stakeAmount ? ` · $${goal.stakeAmount}/person` : ""}
+              </p>
+              <p className="mt-1 text-xs text-chalk-500">
+                Winner earns {winnerPoints} pts automatically.
+                {goal.stakeAmount ? " Cash stake is paid peer-to-peer, not through Ascend." : ""}
+              </p>
             </div>
             {goal.settledAt ? (
               <Pill tone="gold">{winner ? `${winner.name.split(" ")[0]} won` : "Settled"}</Pill>
@@ -143,6 +156,88 @@ export default function GoalDetailPage() {
                 End & settle
               </Button>
             ) : null}
+          </div>
+        </div>
+      )}
+
+      {payout && (iAmWinner || iOwe) && (
+        <div className="px-5">
+          <div className="card-surface rounded-[var(--radius-card)] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">Payout</p>
+            {iAmWinner ? (
+              <>
+                <p className="mt-0.5 font-display text-xl text-chalk-100">
+                  You&apos;re owed ${payout.totalCollected}
+                </p>
+                <p className="mt-1 text-xs text-chalk-500">
+                  ${payout.amountPerPerson} from each of {payout.payerIds.length}{" "}
+                  {payout.payerIds.length === 1 ? "person" : "people"} — self-reported once they mark it paid.
+                </p>
+                <div className="mt-3 flex flex-col gap-2">
+                  {payout.payerIds.map((payerId) => {
+                    const payer = userMap[payerId];
+                    if (!payer) return null;
+                    const hasPaid = goal.paidByUserIds?.includes(payerId) ?? false;
+                    return (
+                      <div key={payerId} className="flex items-center gap-2.5 rounded-2xl bg-white/5 px-3.5 py-2.5">
+                        <Avatar initials={payer.avatarInitials} gradient={payer.avatarColor} size={28} />
+                        <span className="flex-1 text-sm font-semibold text-chalk-100">{payer.name}</span>
+                        <Pill tone={hasPaid ? "volt" : "neutral"}>{hasPaid ? "Paid" : "Owes"}</Pill>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-0.5 font-display text-xl text-chalk-100">
+                  You owe {winner?.name ?? "the winner"} ${payout.amountPerPerson}
+                </p>
+                <p className="mt-1 text-xs text-chalk-500">
+                  Ascend can&apos;t verify payments — tap a button below to open the app and pay directly, then
+                  mark it paid yourself.
+                </p>
+                {winnerPaymentHandles.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {PAYMENT_PROVIDERS.filter((p) => winnerPaymentHandles.some((h) => h.provider === p)).map(
+                      (provider) => {
+                        const handle = winnerPaymentHandles.find((h) => h.provider === provider)!.handle;
+                        const meta = PAYMENT_PROVIDER_META[provider];
+                        return (
+                          <a
+                            key={provider}
+                            href={paymentLink(provider, handle, payout.amountPerPerson, `${goal.title} on Ascend`)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-pill border border-white/15 px-3.5 py-2 text-xs font-semibold text-chalk-100"
+                          >
+                            {meta.emoji} Pay via {meta.label}
+                          </a>
+                        );
+                      }
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-chalk-700">
+                    {winner?.name ?? "The winner"} hasn&apos;t linked a payment method yet.
+                  </p>
+                )}
+                <Button
+                  onClick={() => markStakePaid(goal.id)}
+                  variant={iHavePaid ? "ghost" : "volt"}
+                  size="sm"
+                  className="mt-3 w-full"
+                >
+                  {iHavePaid ? (
+                    <>
+                      <IconCheck className="h-4 w-4" /> Marked as paid
+                    </>
+                  ) : (
+                    "Mark as paid"
+                  )}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
