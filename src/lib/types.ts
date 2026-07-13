@@ -28,6 +28,8 @@ export interface User {
   followers: number;
   following: number;
   location?: string;
+  points?: number;
+  freezes?: number;
 }
 
 export interface GoalParticipant {
@@ -35,6 +37,8 @@ export interface GoalParticipant {
   progress: number; // 0-100
   joinedAt: string;
   isOwner: boolean;
+  lastLoggedAt?: string;
+  stakePaid?: number;
 }
 
 export interface Goal {
@@ -53,6 +57,11 @@ export interface Goal {
   participants: GoalParticipant[];
   streak: number;
   coverGradient: string;
+  stake?: number;
+  pot?: number;
+  settledAt?: string;
+  winnerId?: string;
+  isPublic?: boolean;
 }
 
 export interface Reaction {
@@ -155,4 +164,18 @@ export interface ActivityHistoryItem {
   label: string;
   detail: string;
   createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  threadId: string;
+  senderId: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface Thread {
+  id: string;
+  participantIds: [string, string];
+  lastMessageAt: string;
 }

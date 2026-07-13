@@ -36,6 +36,11 @@ export function isFuture(iso: string): boolean {
   return new Date(iso).getTime() > Date.now();
 }
 
+export function isToday(iso?: string): boolean {
+  if (!iso) return false;
+  return new Date(iso).toDateString() === new Date().toDateString();
+}
+
 export function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }

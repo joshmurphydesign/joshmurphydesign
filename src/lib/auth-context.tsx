@@ -22,6 +22,9 @@ interface AuthContextValue {
   login: (email: string, name?: string) => MeProfile;
   signup: (params: { name: string; email: string; focus: GoalCategory[] }) => MeProfile;
   logout: () => void;
+  updateProfile: (params: { name: string; bio: string; focus: GoalCategory[]; avatarColor: string }) => void;
+  adjustPoints: (delta: number) => void;
+  adjustFreezes: (delta: number) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -46,6 +49,8 @@ function buildProfile(name: string, email: string, focus: GoalCategory[] = ["con
     streak: 4,
     followers: 12,
     following: 8,
+    points: 500,
+    freezes: 1,
   };
 }
 
@@ -106,9 +111,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     persist(null);
   }, [persist]);
 
+  const updateProfile = useCallback(
+    (params: { name: string; bio: string; focus: GoalCategory[]; avatarColor: string }) => {
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next: MeProfile = {
+          ...prev,
+          name: params.name,
+          bio: params.bio,
+          focus: params.focus,
+          avatarColor: params.avatarColor,
+          avatarInitials: initials(params.name),
+        };
+        window.localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+        return next;
+      });
+    },
+    []
+  );
+
+  const adjustPoints = useCallback((delta: number) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next: MeProfile = { ...prev, points: Math.max(0, (prev.points ?? 0) + delta) };
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const adjustFreezes = useCallback((delta: number) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next: MeProfile = { ...prev, freezes: Math.max(0, (prev.freezes ?? 0) + delta) };
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
-    () => ({ user, isHydrated, login, signup, logout }),
-    [user, isHydrated, login, signup, logout]
+    () => ({ user, isHydrated, login, signup, logout, updateProfile, adjustPoints, adjustFreezes }),
+    [user, isHydrated, login, signup, logout, updateProfile, adjustPoints, adjustFreezes]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

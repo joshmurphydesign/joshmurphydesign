@@ -2,6 +2,7 @@ import type {
   ActivityHistoryItem,
   Competition,
   Goal,
+  Message,
   Notification,
   Post,
   PowerPlay,
@@ -27,6 +28,8 @@ export const USERS: User[] = [
     followers: 1204,
     following: 318,
     location: "Denver, CO",
+    points: 1340,
+    freezes: 2,
   },
   {
     id: "u-dre",
@@ -41,6 +44,8 @@ export const USERS: User[] = [
     followers: 2011,
     following: 220,
     location: "Austin, TX",
+    points: 1820,
+    freezes: 1,
   },
   {
     id: "u-sam",
@@ -55,6 +60,8 @@ export const USERS: User[] = [
     followers: 640,
     following: 402,
     location: "Scottsdale, AZ",
+    points: 640,
+    freezes: 0,
   },
   {
     id: "u-priya",
@@ -69,6 +76,8 @@ export const USERS: User[] = [
     followers: 3402,
     following: 190,
     location: "Brooklyn, NY",
+    points: 2450,
+    freezes: 3,
   },
   {
     id: "u-jonah",
@@ -83,6 +92,8 @@ export const USERS: User[] = [
     followers: 512,
     following: 349,
     location: "Chicago, IL",
+    points: 890,
+    freezes: 1,
   },
   {
     id: "u-tasha",
@@ -97,6 +108,8 @@ export const USERS: User[] = [
     followers: 1877,
     following: 264,
     location: "Portland, OR",
+    points: 1975,
+    freezes: 2,
   },
   {
     id: "u-devon",
@@ -111,6 +124,8 @@ export const USERS: User[] = [
     followers: 288,
     following: 501,
     location: "Charlotte, NC",
+    points: 410,
+    freezes: 0,
   },
 ];
 
@@ -131,7 +146,7 @@ export const GOALS: Goal[] = [
     streak: 12,
     coverGradient: "linear-gradient(135deg,#0b3f7a,#35c2f2)",
     participants: [
-      { userId: "me", progress: 62, joinedAt: daysAgo(12), isOwner: true },
+      { userId: "me", progress: 62, joinedAt: daysAgo(12), isOwner: true, lastLoggedAt: hoursAgo(14) },
       { userId: "u-dre", progress: 88, joinedAt: daysAgo(12), isOwner: false },
       { userId: "u-priya", progress: 95, joinedAt: daysAgo(11), isOwner: false },
       { userId: "u-devon", progress: 40, joinedAt: daysAgo(9), isOwner: false },
@@ -153,7 +168,7 @@ export const GOALS: Goal[] = [
     streak: 6,
     coverGradient: "linear-gradient(135deg,#1379c9,#3dd6ff)",
     participants: [
-      { userId: "me", progress: 38, joinedAt: daysAgo(30), isOwner: true },
+      { userId: "me", progress: 38, joinedAt: daysAgo(30), isOwner: true, lastLoggedAt: daysAgo(1) },
       { userId: "u-maya", progress: 71, joinedAt: daysAgo(30), isOwner: false },
       { userId: "u-tasha", progress: 64, joinedAt: daysAgo(28), isOwner: false },
     ],
@@ -175,7 +190,7 @@ export const GOALS: Goal[] = [
     coverGradient: "linear-gradient(135deg,#0f5132,#c8ff3d)",
     participants: [
       { userId: "u-sam", progress: 58, joinedAt: daysAgo(20), isOwner: true },
-      { userId: "me", progress: 45, joinedAt: daysAgo(18), isOwner: false },
+      { userId: "me", progress: 45, joinedAt: daysAgo(18), isOwner: false, lastLoggedAt: daysAgo(3) },
     ],
   },
   {
@@ -193,11 +208,13 @@ export const GOALS: Goal[] = [
     progress: 80,
     streak: 9,
     coverGradient: "linear-gradient(135deg,#ffc23d,#ff3b5c)",
+    stake: 100,
+    pot: 400,
     participants: [
-      { userId: "u-jonah", progress: 100, joinedAt: daysAgo(9), isOwner: true },
-      { userId: "me", progress: 80, joinedAt: daysAgo(9), isOwner: false },
-      { userId: "u-devon", progress: 66, joinedAt: daysAgo(9), isOwner: false },
-      { userId: "u-tasha", progress: 90, joinedAt: daysAgo(8), isOwner: false },
+      { userId: "u-jonah", progress: 100, joinedAt: daysAgo(9), isOwner: true, stakePaid: 100 },
+      { userId: "me", progress: 80, joinedAt: daysAgo(9), isOwner: false, lastLoggedAt: hoursAgo(20), stakePaid: 100 },
+      { userId: "u-devon", progress: 66, joinedAt: daysAgo(9), isOwner: false, stakePaid: 100 },
+      { userId: "u-tasha", progress: 90, joinedAt: daysAgo(8), isOwner: false, stakePaid: 100 },
     ],
   },
   {
@@ -217,7 +234,7 @@ export const GOALS: Goal[] = [
     coverGradient: "linear-gradient(135deg,#3dd6ff,#c8ff3d)",
     participants: [
       { userId: "u-sam", progress: 70, joinedAt: daysAgo(5), isOwner: true },
-      { userId: "me", progress: 55, joinedAt: daysAgo(5), isOwner: false },
+      { userId: "me", progress: 55, joinedAt: daysAgo(5), isOwner: false, lastLoggedAt: daysAgo(2) },
     ],
   },
   {
@@ -235,10 +252,75 @@ export const GOALS: Goal[] = [
     progress: 33,
     streak: 4,
     coverGradient: "linear-gradient(135deg,#ff3b5c,#0b3f7a)",
+    stake: 250,
+    pot: 500,
+    isPublic: true,
     participants: [
-      { userId: "u-priya", progress: 61, joinedAt: daysAgo(14), isOwner: true },
-      { userId: "u-dre", progress: 33, joinedAt: daysAgo(14), isOwner: false },
+      { userId: "u-priya", progress: 61, joinedAt: daysAgo(14), isOwner: true, stakePaid: 250 },
+      { userId: "u-dre", progress: 33, joinedAt: daysAgo(14), isOwner: false, stakePaid: 250 },
     ],
+  },
+  {
+    id: "g-freethrow-duel",
+    title: "Free Throw Streak Duel",
+    category: "basketball",
+    mode: "duel",
+    description: "Head to head — most consecutive makes out of 50 attempts, logged daily.",
+    target: "50",
+    unit: "makes / 50",
+    durationDays: 21,
+    startDate: daysAgo(2),
+    endDate: daysFromNow(19),
+    status: "active",
+    progress: 20,
+    streak: 2,
+    coverGradient: "linear-gradient(135deg,#ff8a3d,#ff3b5c)",
+    stake: 150,
+    pot: 150,
+    isPublic: true,
+    participants: [{ userId: "u-devon", progress: 20, joinedAt: daysAgo(2), isOwner: true, stakePaid: 150 }],
+  },
+  {
+    id: "g-clean15-nutrition",
+    title: "Clean 15 Nutrition Challenge",
+    category: "nutrition",
+    mode: "challenge",
+    description: "15 straight days of on-plan meals. Group accountability, no cheat-meal excuses.",
+    target: "15",
+    unit: "clean days",
+    durationDays: 15,
+    startDate: daysAgo(4),
+    endDate: daysFromNow(11),
+    status: "active",
+    progress: 27,
+    streak: 4,
+    coverGradient: "linear-gradient(135deg,#c8ff3d,#0f5132)",
+    stake: 75,
+    pot: 225,
+    isPublic: true,
+    participants: [
+      { userId: "u-tasha", progress: 27, joinedAt: daysAgo(4), isOwner: true, stakePaid: 75 },
+      { userId: "u-maya", progress: 33, joinedAt: daysAgo(4), isOwner: false, stakePaid: 75 },
+      { userId: "u-sam", progress: 20, joinedAt: daysAgo(3), isOwner: false, stakePaid: 75 },
+    ],
+  },
+  {
+    id: "g-mindful-mornings",
+    title: "Mindful Mornings Quest",
+    category: "recovery",
+    mode: "quest",
+    description: "8 weeks of a 10-minute breathwork + mobility ritual before the day starts.",
+    target: "56",
+    unit: "morning sessions",
+    durationDays: 56,
+    startDate: daysAgo(6),
+    endDate: daysFromNow(50),
+    status: "active",
+    progress: 11,
+    streak: 6,
+    coverGradient: "linear-gradient(135deg,#3dd6ff,#0b3f7a)",
+    isPublic: true,
+    participants: [{ userId: "u-jonah", progress: 11, joinedAt: daysAgo(6), isOwner: true }],
   },
 ];
 
@@ -535,6 +617,23 @@ export const ACTIVITY_HISTORY: ActivityHistoryItem[] = [
   { id: "h-3", userId: "me", label: "Joined Break 80", detail: "Invited by Sam Ibarra", createdAt: daysAgo(18) },
   { id: "h-4", userId: "me", label: "Hit 10,412 steps", detail: "10K Steps Streak — day 9", createdAt: daysAgo(1) },
   { id: "h-5", userId: "me", label: "Completed mobility reset", detail: "10 minutes — hip + ankle focus", createdAt: daysAgo(2) },
+];
+
+export const MESSAGES: Message[] = [
+  {
+    id: "m-1",
+    threadId: "u-sam",
+    senderId: "u-sam",
+    text: "Hey! Saw you joined Break 80 — down to play Saturday morning if you're free?",
+    createdAt: daysAgo(2),
+  },
+  {
+    id: "m-2",
+    threadId: "u-priya",
+    senderId: "u-priya",
+    text: "88 days and counting on the push-up streak 😤 you're right behind me, don't slow down now.",
+    createdAt: hoursAgo(9),
+  },
 ];
 
 export function userById(id: string): User | undefined {

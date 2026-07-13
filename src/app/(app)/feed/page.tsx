@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { useData } from "@/lib/data-context";
 import { TopBar } from "@/components/shell/TopBar";
 import { NotificationsButton } from "@/components/shell/NotificationsButton";
+import { HeaderIconLink } from "@/components/shell/HeaderIconLink";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { PowerPlayCard } from "@/components/powerplay/PowerPlayCard";
+import { IconMessage, IconSearch } from "@/components/ui/Icons";
 import { cn } from "@/lib/utils";
 import type { Post } from "@/lib/types";
 
@@ -19,7 +21,7 @@ const FILTERS: { key: string; label: string; match?: Post["type"] }[] = [
 ];
 
 export default function FeedPage() {
-  const { posts, powerPlays } = useData();
+  const { posts, powerPlays, threads } = useData();
   const [filter, setFilter] = useState("all");
 
   const sorted = useMemo(
@@ -28,10 +30,25 @@ export default function FeedPage() {
   );
   const filtered = filter === "all" ? sorted : sorted.filter((p) => p.type === filter);
   const livePowerPlays = powerPlays.filter((p) => p.isLive);
+  const hasUnreadThreads = threads.some((t) => t.unread);
 
   return (
     <div className="flex flex-col gap-4">
-      <TopBar title="Feed" right={<NotificationsButton />} />
+      <TopBar
+        title="Feed"
+        right={
+          <div className="flex items-center gap-2">
+            <HeaderIconLink href="/discover" icon={<IconSearch className="h-5 w-5" />} label="Discover" />
+            <HeaderIconLink
+              href="/messages"
+              icon={<IconMessage className="h-5 w-5" />}
+              label="Messages"
+              dot={hasUnreadThreads}
+            />
+            <NotificationsButton />
+          </div>
+        }
+      />
 
       {livePowerPlays.length > 0 && (
         <div className="flex gap-3 overflow-x-auto px-5 pb-1">

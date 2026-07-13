@@ -5,11 +5,12 @@ import { useAuth } from "@/lib/auth-context";
 import { useData } from "@/lib/data-context";
 import { Avatar } from "@/components/ui/Avatar";
 import { NotificationsButton } from "@/components/shell/NotificationsButton";
+import { HeaderIconLink } from "@/components/shell/HeaderIconLink";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { GoalCard } from "@/components/goal/GoalCard";
 import { PowerPlayCard } from "@/components/powerplay/PowerPlayCard";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { IconBolt, IconFlame, IconTrophy } from "@/components/ui/Icons";
+import { IconBolt, IconFlame, IconMessage, IconSearch, IconTrophy } from "@/components/ui/Icons";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -21,9 +22,11 @@ function greeting(): string {
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { goals, powerPlays, posts, notifications, competitions } = useData();
+  const { goals, powerPlays, posts, notifications, competitions, threads } = useData();
 
   if (!user) return null;
+
+  const hasUnreadThreads = threads.some((t) => t.unread);
 
   const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === "me"));
   const livePowerPlays = powerPlays.filter((p) => p.isLive);
@@ -45,7 +48,16 @@ export default function HomePage() {
             <p className="text-lg font-bold leading-tight text-chalk-100">{user.name.split(" ")[0]}</p>
           </div>
         </div>
-        <NotificationsButton />
+        <div className="flex items-center gap-2">
+          <HeaderIconLink href="/discover" icon={<IconSearch className="h-5 w-5" />} label="Discover" />
+          <HeaderIconLink
+            href="/messages"
+            icon={<IconMessage className="h-5 w-5" />}
+            label="Messages"
+            dot={hasUnreadThreads}
+          />
+          <NotificationsButton />
+        </div>
       </header>
 
       <div className="grid grid-cols-3 gap-3 px-5">

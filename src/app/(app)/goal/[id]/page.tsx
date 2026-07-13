@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { useData } from "@/lib/data-context";
 import { useUserMap } from "@/lib/people";
 import { TopBar } from "@/components/shell/TopBar";
@@ -10,8 +11,9 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { IconCheck } from "@/components/ui/Icons";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { categoryEmoji, daysUntil, modeLabel } from "@/lib/utils";
+import { categoryEmoji, daysUntil, isToday, modeLabel } from "@/lib/utils";
 
 const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
   goal: "blue",
@@ -22,8 +24,10 @@ const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
 
 export default function GoalDetailPage() {
   const params = useParams<{ id: string }>();
-  const { goals, posts, joinGoal } = useData();
+  const { user } = useAuth();
+  const { goals, posts, joinGoal, logProgress, spendStreakFreeze, settleStakes } = useData();
   const userMap = useUserMap();
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   const goal = goals.find((g) => g.id === params.id);
   const [daysLeft] = useState(() => daysUntil(goal?.endDate ?? new Date().toISOString()));
@@ -37,11 +41,23 @@ export default function GoalDetailPage() {
     );
   }
 
-  const iAmIn = goal.participants.some((p) => p.userId === "me");
+  const me = goal.participants.find((p) => p.userId === "me");
+  const iAmIn = !!me;
+  const iAmOwner = !!me?.isOwner;
+  const loggedToday = isToday(me?.lastLoggedAt);
+  const streakAtRisk = iAmIn && !!me?.lastLoggedAt && !loggedToday && goal.streak > 0;
   const sortedParticipants = [...goal.participants].sort((a, b) => b.progress - a.progress);
   const relatedPosts = posts
     .filter((p) => p.goalId === goal.id)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const winner = goal.winnerId ? userMap[goal.winnerId] : undefined;
+
+  const handleJoin = () => {
+    setJoinError(null);
+    const ok = joinGoal(goal.id);
+    if (!ok) setJoinError("Not enough points to cover this stake.");
+  };
 
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -70,6 +86,27 @@ export default function GoalDetailPage() {
         <MiniStat label="Streak" value={String(goal.streak)} sub="days" />
       </div>
 
+      {!!goal.stake && (
+        <div className="px-5">
+          <div className="card-surface-raised flex items-center justify-between rounded-2xl p-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">Pot on the line</p>
+              <p className="mt-0.5 font-display text-xl text-gold-500">{"\u{1FA99}"} {goal.pot} pts</p>
+              {me?.stakePaid !== undefined && (
+                <p className="mt-0.5 text-xs text-chalk-500">Your stake: {me.stakePaid} pts</p>
+              )}
+            </div>
+            {goal.settledAt ? (
+              <Pill tone="gold">{winner ? `${winner.name.split(" ")[0]} won` : "Settled"}</Pill>
+            ) : iAmOwner ? (
+              <Button onClick={() => settleStakes(goal.id)} variant="outline" size="sm">
+                End & settle
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      )}
+
       <div className="px-5">
         <div className="card-surface rounded-[var(--radius-card)] p-4">
           <div className="flex items-center justify-between text-sm">
@@ -77,10 +114,41 @@ export default function GoalDetailPage() {
             <span className="font-bold text-chalk-100">{goal.progress}%</span>
           </div>
           <ProgressBar value={goal.progress} className="mt-2" height={10} />
-          {!iAmIn && (
-            <Button onClick={() => joinGoal(goal.id)} variant="volt" size="md" className="mt-4 w-full">
-              Join this {modeLabel(goal.mode).toLowerCase()}
-            </Button>
+
+          {iAmIn ? (
+            <div className="mt-4 flex flex-col gap-2">
+              <Button
+                onClick={() => logProgress(goal.id)}
+                disabled={loggedToday}
+                variant={loggedToday ? "ghost" : "volt"}
+                size="md"
+                className="w-full"
+              >
+                {loggedToday ? (
+                  <>
+                    <IconCheck className="h-4 w-4" /> Logged today
+                  </>
+                ) : (
+                  "Log today's progress"
+                )}
+              </Button>
+              {streakAtRisk && (
+                <button
+                  onClick={() => spendStreakFreeze(goal.id)}
+                  disabled={(user?.freezes ?? 0) <= 0}
+                  className="text-xs font-semibold text-sky-500 disabled:text-chalk-700"
+                >
+                  {"\u{2744}\u{FE0F}"} Streak at risk — use a freeze ({user?.freezes ?? 0} left)
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 flex flex-col gap-2">
+              <Button onClick={handleJoin} variant="volt" size="md" className="w-full">
+                {goal.stake ? `Join for ${goal.stake} pts` : `Join this ${modeLabel(goal.mode).toLowerCase()}`}
+              </Button>
+              {joinError && <p className="text-xs font-semibold text-rival-500">{joinError}</p>}
+            </div>
           )}
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { useData } from "@/lib/data-context";
 import { USERS } from "@/lib/mock-data";
 import { TopBar } from "@/components/shell/TopBar";
@@ -34,8 +35,11 @@ const MODES: { mode: GoalMode; desc: string }[] = [
 
 const STEP_LABELS = ["Category", "Details", "Rally", "Publish"];
 
+const STAKE_MODES: GoalMode[] = ["challenge", "duel"];
+
 export default function CreateGoalPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const { createGoal } = useData();
   const [step, setStep] = useState(0);
 
@@ -47,14 +51,20 @@ export default function CreateGoalPage() {
   const [unit, setUnit] = useState("");
   const [durationDays, setDurationDays] = useState(30);
   const [inviteeIds, setInviteeIds] = useState<string[]>([]);
+  const [stake, setStake] = useState("");
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const toggleInvitee = (id: string) => {
     setInviteeIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
+  const stakeAmount = Math.max(0, Number(stake) || 0);
+  const myPoints = user?.points ?? 0;
+  const stakeTooHigh = STAKE_MODES.includes(mode) && stakeAmount > myPoints;
+
   const canAdvance = [
     !!category,
-    title.trim().length > 1 && target.trim().length > 0 && unit.trim().length > 0,
+    title.trim().length > 1 && target.trim().length > 0 && unit.trim().length > 0 && !stakeTooHigh,
     true,
     true,
   ][step];
@@ -70,7 +80,12 @@ export default function CreateGoalPage() {
       unit: unit.trim(),
       durationDays,
       inviteeIds,
+      stake: STAKE_MODES.includes(mode) ? stakeAmount : 0,
     });
+    if (!goal) {
+      setPublishError("Not enough points to cover that stake.");
+      return;
+    }
     router.replace(`/goal/${goal.id}`);
   };
 
@@ -198,6 +213,25 @@ export default function CreateGoalPage() {
               className="accent-[#1379c9]"
             />
           </Field>
+          {STAKE_MODES.includes(mode) && (
+            <Field label="Points wager (optional)">
+              <input
+                inputMode="numeric"
+                value={stake}
+                onChange={(e) => setStake(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="0"
+                className={cn(
+                  "rounded-2xl border bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue",
+                  stakeTooHigh ? "border-rival-500/50" : "border-white/8"
+                )}
+              />
+              <p className={cn("text-xs", stakeTooHigh ? "text-rival-500" : "text-chalk-500")}>
+                {stakeTooHigh
+                  ? `You only have ${myPoints} points available.`
+                  : `Everyone who joins matches your stake. Winner takes the pot. You have ${myPoints} points.`}
+              </p>
+            </Field>
+          )}
         </div>
       )}
 
@@ -259,7 +293,14 @@ export default function CreateGoalPage() {
             <SummaryRow label="Duration" value={`${durationDays} days`} />
             <SummaryRow label="Target" value={`${target || "—"} ${unit}`} />
             <SummaryRow label="Rally" value={`${inviteeIds.length} invited`} />
+            {STAKE_MODES.includes(mode) && stakeAmount > 0 && (
+              <>
+                <SummaryRow label="Your stake" value={`${stakeAmount} pts`} />
+                <SummaryRow label="Starting pot" value={`${stakeAmount} pts`} />
+              </>
+            )}
           </div>
+          {publishError && <p className="text-sm font-semibold text-rival-500">{publishError}</p>}
           <Button onClick={publish} variant="volt" size="lg" className="mt-2 w-full">
             Publish {modeLabel(mode)}
           </Button>

@@ -1,10 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useData } from "@/lib/data-context";
 import type { Goal } from "@/lib/types";
-import { categoryEmoji, categoryLabel, modeLabel } from "@/lib/utils";
+import { categoryEmoji, categoryLabel, cn, isToday, modeLabel } from "@/lib/utils";
 import { Pill } from "@/components/ui/Pill";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { AvatarStack } from "@/components/ui/AvatarStack";
+import { IconCheck, IconPlus } from "@/components/ui/Icons";
 
 const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
   goal: "blue",
@@ -14,6 +18,10 @@ const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
 };
 
 export function GoalCard({ goal }: { goal: Goal }) {
+  const { logProgress } = useData();
+  const me = goal.participants.find((p) => p.userId === "me");
+  const loggedToday = isToday(me?.lastLoggedAt);
+
   return (
     <Link
       href={`/goal/${goal.id}`}
@@ -32,7 +40,26 @@ export function GoalCard({ goal }: { goal: Goal }) {
             <p className="text-xs text-chalk-500">{categoryLabel(goal.category)}</p>
           </div>
         </div>
-        <StreakBadge days={goal.streak} />
+        <div className="flex items-center gap-2">
+          <StreakBadge days={goal.streak} />
+          {me && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!loggedToday) logProgress(goal.id);
+              }}
+              disabled={loggedToday}
+              aria-label={loggedToday ? "Logged today" : "Log today's progress"}
+              className={cn(
+                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90",
+                loggedToday ? "bg-volt-500/15 text-volt-400" : "bg-ascend-gradient text-white"
+              )}
+            >
+              {loggedToday ? <IconCheck className="h-3.5 w-3.5" /> : <IconPlus className="h-3.5 w-3.5" />}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-4 flex items-center justify-between text-xs text-chalk-500">

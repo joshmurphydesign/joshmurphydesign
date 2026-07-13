@@ -8,10 +8,12 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useAuth } from "./auth-context";
 import {
   ACTIVITY_HISTORY,
   COMPETITIONS,
   GOALS,
+  MESSAGES,
   NOTIFICATIONS,
   POSTS,
   POWER_PLAYS,
@@ -23,12 +25,22 @@ import type {
   Goal,
   GoalCategory,
   GoalMode,
+  Message,
   Notification,
   Post,
   PowerPlay,
 } from "./types";
 
-const DATA_KEY = "ascend_data_v1";
+const DATA_KEY = "ascend_data_v2";
+
+function isSameDay(a: string, b: number): boolean {
+  return new Date(a).toDateString() === new Date(b).toDateString();
+}
+function isYesterday(a: string, b: number): boolean {
+  const prev = new Date(b);
+  prev.setDate(prev.getDate() - 1);
+  return new Date(a).toDateString() === prev.toDateString();
+}
 
 interface PersistedShape {
   goals: Goal[];
@@ -36,6 +48,9 @@ interface PersistedShape {
   powerPlays: PowerPlay[];
   notifications: Notification[];
   activity: ActivityHistoryItem[];
+  messages: Message[];
+  following: string[];
+  threadReads: Record<string, string>;
 }
 
 function loadInitial(): PersistedShape {
@@ -45,7 +60,16 @@ function loadInitial(): PersistedShape {
     powerPlays: POWER_PLAYS,
     notifications: NOTIFICATIONS,
     activity: ACTIVITY_HISTORY,
+    messages: MESSAGES,
+    following: [],
+    threadReads: {},
   };
+}
+
+export interface ThreadPreview {
+  otherUserId: string;
+  lastMessage: Message;
+  unread: boolean;
 }
 
 interface DataContextValue {
@@ -55,9 +79,11 @@ interface DataContextValue {
   powerPlays: PowerPlay[];
   notifications: Notification[];
   activity: ActivityHistoryItem[];
+  messages: Message[];
+  following: string[];
   toggleReaction: (postId: string, emoji: string) => void;
   addComment: (postId: string, text: string) => void;
-  joinGoal: (goalId: string) => void;
+  joinGoal: (goalId: string) => boolean;
   joinPowerPlay: (powerPlayId: string) => void;
   createGoal: (params: {
     title: string;
@@ -68,8 +94,16 @@ interface DataContextValue {
     unit: string;
     durationDays: number;
     inviteeIds: string[];
-  }) => Goal;
+    stake: number;
+  }) => Goal | null;
   markNotificationsRead: () => void;
+  logProgress: (goalId: string) => void;
+  spendStreakFreeze: (goalId: string) => void;
+  settleStakes: (goalId: string) => void;
+  toggleFollow: (userId: string) => void;
+  sendMessage: (otherUserId: string, text: string) => void;
+  markThreadRead: (otherUserId: string) => void;
+  threads: ThreadPreview[];
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -83,6 +117,7 @@ const GRADIENTS = [
 ];
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
+  const { adjustPoints, adjustFreezes, user } = useAuth();
   const [state, setState] = useState<PersistedShape>(loadInitial);
   const [hydrated, setHydrated] = useState(false);
 
@@ -140,22 +175,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const joinGoal = useCallback((goalId: string) => {
-    setState((prev) => ({
-      ...prev,
-      goals: prev.goals.map((goal) => {
-        if (goal.id !== goalId) return goal;
-        if (goal.participants.some((p) => p.userId === "me")) return goal;
-        return {
-          ...goal,
-          participants: [
-            ...goal.participants,
-            { userId: "me", progress: 0, joinedAt: new Date().toISOString(), isOwner: false },
-          ],
-        };
-      }),
-    }));
-  }, []);
+  const joinGoal = useCallback(
+    (goalId: string): boolean => {
+      const goal = state.goals.find((g) => g.id === goalId);
+      if (!goal || goal.participants.some((p) => p.userId === "me")) return false;
+      const stake = goal.stake ?? 0;
+      if (stake > 0 && (user?.points ?? 0) < stake) return false;
+      if (stake > 0) adjustPoints(-stake);
+      setState((prev) => ({
+        ...prev,
+        goals: prev.goals.map((g) =>
+          g.id !== goalId
+            ? g
+            : {
+                ...g,
+                pot: stake > 0 ? (g.pot ?? 0) + stake : g.pot,
+                participants: [
+                  ...g.participants,
+                  {
+                    userId: "me",
+                    progress: 0,
+                    joinedAt: new Date().toISOString(),
+                    isOwner: false,
+                    stakePaid: stake > 0 ? stake : undefined,
+                  },
+                ],
+              }
+        ),
+      }));
+      return true;
+    },
+    [state.goals, user, adjustPoints]
+  );
 
   const joinPowerPlay = useCallback((powerPlayId: string) => {
     setState((prev) => ({
@@ -185,7 +236,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       unit: string;
       durationDays: number;
       inviteeIds: string[];
-    }): Goal => {
+      stake: number;
+    }): Goal | null => {
+      const stake = Math.max(0, params.stake || 0);
+      if (stake > 0 && (user?.points ?? 0) < stake) return null;
       const now = new Date();
       const end = new Date(now.getTime() + params.durationDays * 86400 * 1000);
       const goal: Goal = {
@@ -203,8 +257,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         progress: 0,
         streak: 0,
         coverGradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)],
+        stake: stake > 0 ? stake : undefined,
+        pot: stake > 0 ? stake : undefined,
         participants: [
-          { userId: "me", progress: 0, joinedAt: now.toISOString(), isOwner: true },
+          { userId: "me", progress: 0, joinedAt: now.toISOString(), isOwner: true, stakePaid: stake > 0 ? stake : undefined },
           ...params.inviteeIds.map((id) => ({
             userId: id,
             progress: 0,
@@ -213,6 +269,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           })),
         ],
       };
+      if (stake > 0) adjustPoints(-stake);
       setState((prev) => ({
         ...prev,
         goals: [goal, ...prev.goals],
@@ -231,7 +288,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }));
       return goal;
     },
-    []
+    [user, adjustPoints]
   );
 
   const markNotificationsRead = useCallback(() => {
@@ -241,6 +298,205 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const logProgress = useCallback(
+    (goalId: string) => {
+      const now = Date.now();
+      setState((prev) => {
+        const goal = prev.goals.find((g) => g.id === goalId);
+        if (!goal) return prev;
+        const me = goal.participants.find((p) => p.userId === "me");
+        if (!me || (me.lastLoggedAt && isSameDay(me.lastLoggedAt, now))) return prev;
+
+        const step = Math.max(1, Math.round(100 / goal.durationDays));
+        const nextProgress = Math.min(100, me.progress + step);
+        const continuing = !!me.lastLoggedAt && isYesterday(me.lastLoggedAt, now);
+        const nextStreak = continuing ? goal.streak + 1 : 1;
+
+        const nowIso = new Date(now).toISOString();
+        const updatedParticipants = goal.participants.map((p) =>
+          p.userId === "me" ? { ...p, progress: nextProgress, lastLoggedAt: nowIso } : p
+        );
+        const aggregateProgress = Math.round(
+          updatedParticipants.reduce((sum, p) => sum + p.progress, 0) / updatedParticipants.length
+        );
+
+        const milestone = nextStreak > 0 && nextStreak % 7 === 0;
+        if (milestone) adjustFreezes(1);
+
+        const hitTarget = nextProgress >= 100 && me.progress < 100;
+        const post: Post = {
+          id: `p-${now}`,
+          userId: "me",
+          goalId: goal.id,
+          type: hitTarget ? "win" : milestone ? "streak" : "progress",
+          headline: hitTarget
+            ? `Hit the target on ${goal.title}`
+            : milestone
+              ? `${nextStreak}-day streak on ${goal.title}`
+              : `Logged progress on ${goal.title}`,
+          body: hitTarget
+            ? "Target complete. Show up, stand out — mission accomplished."
+            : milestone
+              ? `${nextStreak} days in a row. Earned a streak freeze for staying consistent.`
+              : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`,
+          statValue: `${nextProgress}%`,
+          statLabel: "progress",
+          createdAt: nowIso,
+          reactions: [],
+          comments: [],
+        };
+
+        return {
+          ...prev,
+          goals: prev.goals.map((g) =>
+            g.id !== goalId
+              ? g
+              : { ...g, participants: updatedParticipants, progress: aggregateProgress, streak: nextStreak }
+          ),
+          posts: [post, ...prev.posts],
+          activity: [
+            {
+              id: `h-${now}`,
+              userId: "me",
+              label: `Logged progress`,
+              detail: `${goal.title} — day ${nextStreak}`,
+              createdAt: nowIso,
+            },
+            ...prev.activity,
+          ],
+        };
+      });
+    },
+    [adjustFreezes]
+  );
+
+  const spendStreakFreeze = useCallback(
+    (goalId: string) => {
+      if ((user?.freezes ?? 0) <= 0) return;
+      const now = new Date();
+      setState((prev) => {
+        const goal = prev.goals.find((g) => g.id === goalId);
+        if (!goal) return prev;
+        const me = goal.participants.find((p) => p.userId === "me");
+        if (!me || (me.lastLoggedAt && isSameDay(me.lastLoggedAt, now.getTime()))) return prev;
+        return {
+          ...prev,
+          goals: prev.goals.map((g) =>
+            g.id !== goalId
+              ? g
+              : {
+                  ...g,
+                  participants: g.participants.map((p) =>
+                    p.userId === "me" ? { ...p, lastLoggedAt: now.toISOString() } : p
+                  ),
+                }
+          ),
+          activity: [
+            {
+              id: `h-${now.getTime()}`,
+              userId: "me",
+              label: "Used a streak freeze",
+              detail: goal.title,
+              createdAt: now.toISOString(),
+            },
+            ...prev.activity,
+          ],
+        };
+      });
+      adjustFreezes(-1);
+    },
+    [user, adjustFreezes]
+  );
+
+  const settleStakes = useCallback(
+    (goalId: string) => {
+      const now = new Date();
+      let payout = 0;
+      let winnerIsMe = false;
+      setState((prev) => {
+        const goal = prev.goals.find((g) => g.id === goalId);
+        if (!goal || goal.settledAt || !goal.pot) return prev;
+        const winner = [...goal.participants].sort((a, b) => b.progress - a.progress)[0];
+        payout = goal.pot;
+        winnerIsMe = winner.userId === "me";
+        const post: Post = {
+          id: `p-${now.getTime()}`,
+          userId: winner.userId,
+          goalId: goal.id,
+          type: "competition-result",
+          headline: `Won the pot on ${goal.title}`,
+          body: `Took the top spot and claimed the ${goal.pot}-point pot.`,
+          statValue: `${goal.pot} pts`,
+          statLabel: "pot won",
+          createdAt: now.toISOString(),
+          reactions: [],
+          comments: [],
+        };
+        return {
+          ...prev,
+          goals: prev.goals.map((g) =>
+            g.id !== goalId
+              ? g
+              : { ...g, status: "completed", settledAt: now.toISOString(), winnerId: winner.userId }
+          ),
+          posts: [post, ...prev.posts],
+        };
+      });
+      if (winnerIsMe && payout > 0) adjustPoints(payout);
+    },
+    [adjustPoints]
+  );
+
+  const toggleFollow = useCallback((userId: string) => {
+    setState((prev) => ({
+      ...prev,
+      following: prev.following.includes(userId)
+        ? prev.following.filter((id) => id !== userId)
+        : [...prev.following, userId],
+    }));
+  }, []);
+
+  const sendMessage = useCallback((otherUserId: string, text: string) => {
+    const message: Message = {
+      id: `m-${Date.now()}`,
+      threadId: otherUserId,
+      senderId: "me",
+      text,
+      createdAt: new Date().toISOString(),
+    };
+    setState((prev) => ({ ...prev, messages: [...prev.messages, message] }));
+  }, []);
+
+  const markThreadRead = useCallback((otherUserId: string) => {
+    const now = new Date().toISOString();
+    setState((prev) => ({
+      ...prev,
+      threadReads: { ...prev.threadReads, [otherUserId]: now },
+    }));
+  }, []);
+
+  const threads = useMemo<ThreadPreview[]>(() => {
+    const byThread = new Map<string, Message[]>();
+    for (const m of state.messages) {
+      const list = byThread.get(m.threadId) ?? [];
+      list.push(m);
+      byThread.set(m.threadId, list);
+    }
+    return Array.from(byThread.entries())
+      .map(([otherUserId, msgs]) => {
+        const sorted = [...msgs].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        const lastMessage = sorted[0];
+        const readAt = state.threadReads[otherUserId];
+        const unread =
+          lastMessage.senderId !== "me" &&
+          (!readAt || new Date(lastMessage.createdAt).getTime() > new Date(readAt).getTime());
+        return { otherUserId, lastMessage, unread };
+      })
+      .sort((a, b) => new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime());
+  }, [state.messages, state.threadReads]);
+
   const value = useMemo<DataContextValue>(
     () => ({
       goals: state.goals,
@@ -249,14 +505,38 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       powerPlays: state.powerPlays,
       notifications: state.notifications,
       activity: state.activity,
+      messages: state.messages,
+      following: state.following,
       toggleReaction,
       addComment,
       joinGoal,
       joinPowerPlay,
       createGoal,
       markNotificationsRead,
+      logProgress,
+      spendStreakFreeze,
+      settleStakes,
+      toggleFollow,
+      sendMessage,
+      markThreadRead,
+      threads,
     }),
-    [state, toggleReaction, addComment, joinGoal, joinPowerPlay, createGoal, markNotificationsRead]
+    [
+      state,
+      toggleReaction,
+      addComment,
+      joinGoal,
+      joinPowerPlay,
+      createGoal,
+      markNotificationsRead,
+      logProgress,
+      spendStreakFreeze,
+      settleStakes,
+      toggleFollow,
+      sendMessage,
+      markThreadRead,
+      threads,
+    ]
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

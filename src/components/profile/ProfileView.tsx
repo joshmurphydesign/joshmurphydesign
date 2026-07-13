@@ -1,17 +1,22 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { useData } from "@/lib/data-context";
 import { useUserMap } from "@/lib/people";
 import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
+import { Button } from "@/components/ui/Button";
+import { IconMessage } from "@/components/ui/Icons";
 import { GoalCard } from "@/components/goal/GoalCard";
-import { categoryEmoji, categoryLabel, timeAgo } from "@/lib/utils";
+import { categoryEmoji, categoryLabel, cn, timeAgo } from "@/lib/utils";
 import type { User } from "@/lib/types";
 
 export function ProfileView({ person }: { person: User & { email?: string } }) {
-  const { goals, competitions, powerPlays, activity } = useData();
+  const { goals, competitions, powerPlays, activity, following, toggleFollow } = useData();
   const userMap = useUserMap();
+  const isMe = person.id === "me";
+  const isFollowing = following.includes(person.id);
 
   const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === person.id));
   const completedGoals = myGoals.filter((g) => g.status === "completed" || g.progress >= 100);
@@ -62,6 +67,24 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
               </Pill>
             ))}
           </div>
+          {!isMe && (
+            <div className="relative mt-5 flex items-center gap-2.5">
+              <button
+                onClick={() => toggleFollow(person.id)}
+                className={cn(
+                  "flex-1 rounded-pill px-4 py-2.5 text-sm font-bold transition-colors",
+                  isFollowing ? "bg-white/10 text-chalk-100" : "bg-ascend-gradient text-white"
+                )}
+              >
+                {isFollowing ? "Following" : "Follow"}
+              </button>
+              <Link href={`/messages/${person.id}`} className="flex-1">
+                <Button variant="outline" size="md" className="w-full">
+                  <IconMessage className="h-4 w-4" /> Message
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -69,7 +92,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
         <StatBlock value={person.score.toLocaleString()} label="Score" />
         <StatBlock value={person.streak} label="Streak" />
         <StatBlock value={person.followers} label="Followers" />
-        <StatBlock value={person.following} label="Following" />
+        <StatBlock value={isMe ? following.length : person.following} label="Following" />
       </div>
 
       {achievements.length > 0 && (
