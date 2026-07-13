@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useAuth } from "./auth-context";
-import { computeProgress } from "./metric-presets";
+import { computeProgress, isStepsGoal } from "./metric-presets";
 import {
   ACTIVITY_HISTORY,
   COMPETITIONS,
@@ -28,6 +28,8 @@ import type {
   GoalMetric,
   GoalMode,
   GoalParticipant,
+  HealthConnection,
+  HealthProvider,
   Message,
   Notification,
   Post,
@@ -55,6 +57,7 @@ interface PersistedShape {
   messages: Message[];
   following: string[];
   threadReads: Record<string, string>;
+  health: HealthConnection | null;
 }
 
 function loadInitial(): PersistedShape {
@@ -67,6 +70,7 @@ function loadInitial(): PersistedShape {
     messages: MESSAGES,
     following: [],
     threadReads: {},
+    health: null,
   };
 }
 
@@ -85,6 +89,7 @@ interface DataContextValue {
   activity: ActivityHistoryItem[];
   messages: Message[];
   following: string[];
+  health: HealthConnection | null;
   toggleReaction: (postId: string, emoji: string) => void;
   addComment: (postId: string, text: string) => void;
   joinGoal: (goalId: string, startValue?: number) => void;
@@ -104,13 +109,16 @@ interface DataContextValue {
   }) => Goal;
   markNotificationsRead: () => void;
   createPost: (params: { body: string; imageUrl?: string; goalId?: string }) => void;
-  logProgress: (goalId: string, value?: number) => void;
+  logProgress: (goalId: string, value?: number, source?: "manual" | "health") => void;
   spendStreakFreeze: (goalId: string) => void;
   settleGoal: (goalId: string) => void;
   toggleFollow: (userId: string) => void;
   sendMessage: (otherUserId: string, text: string) => void;
   markThreadRead: (otherUserId: string) => void;
   threads: ThreadPreview[];
+  connectHealth: (provider: HealthProvider) => void;
+  disconnectHealth: () => void;
+  syncHealth: () => void;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -377,7 +385,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logProgress = useCallback(
-    (goalId: string, value?: number) => {
+    (goalId: string, value?: number, source: "manual" | "health" = "manual") => {
       const now = Date.now();
       setState((prev) => {
         const goal = prev.goals.find((g) => g.id === goalId);
@@ -432,6 +440,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             : isCumulative
               ? `${nextCurrentValue} ${goal.unit} logged`
               : `${nextCurrentValue} ${goal.unit}`;
+
+        const isHealthSync = source === "health";
+        const providerLabel =
+          prev.health?.provider === "apple" ? "Apple Health" : prev.health?.provider === "samsung" ? "Samsung Health" : undefined;
+        const providerEmoji = prev.health?.provider === "apple" ? "\u{1F34E}" : "\u{231A}";
+
         const post: Post = {
           id: `p-${now}`,
           userId: "me",
@@ -441,15 +455,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             ? `Hit the target on ${goal.title}`
             : milestone
               ? `${nextStreak}-day streak on ${goal.title}`
-              : alreadyLoggedToday
-                ? `Added more to ${goal.title}`
-                : `Logged progress on ${goal.title}`,
+              : isHealthSync && providerLabel
+                ? `${providerEmoji} ${providerLabel} synced ${goal.title}`
+                : alreadyLoggedToday
+                  ? `Added more to ${goal.title}`
+                  : `Logged progress on ${goal.title}`,
           body: hitTarget
             ? "Target complete. Show up, stand out — mission accomplished."
             : milestone
               ? `${nextStreak} days in a row. Earned a streak freeze for staying consistent.`
               : valueLabel
-                ? `${alreadyLoggedToday ? "Another entry" : `Day ${nextStreak} logged`} — ${valueLabel}. ${nextProgress}% of the way there.`
+                ? `${isHealthSync ? "Auto-synced" : alreadyLoggedToday ? "Another entry" : `Day ${nextStreak} logged`} — ${valueLabel}. ${nextProgress}% of the way there.`
                 : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`,
           statValue: `${nextProgress}%`,
           statLabel: "progress",
@@ -470,7 +486,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             {
               id: `h-${now}`,
               userId: "me",
-              label: alreadyLoggedToday ? "Logged more progress" : "Logged progress",
+              label: isHealthSync && providerLabel ? `Auto-synced from ${providerLabel}` : alreadyLoggedToday ? "Logged more progress" : "Logged progress",
               detail: `${goal.title} — day ${nextStreak}`,
               createdAt: nowIso,
             },
@@ -481,6 +497,79 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     },
     [adjustFreezes]
   );
+
+  // Note: these two actions each fire exactly one setState call against
+  // `state` and derive the values they need (delta, eligible goals) from the
+  // component's own `state` closure rather than from inside the updater.
+  // Chaining a second `setState` off the first (e.g. connectHealth calling
+  // syncHealth synchronously) only eagerly runs the *first* queued updater —
+  // the second is deferred to the batched render, so reading a variable it
+  // was meant to set immediately afterward silently sees stale defaults.
+  const syncHealth = useCallback(() => {
+    if (!state.health) return;
+    const now = Date.now();
+    const todayDate = new Date(now).toDateString();
+    const isNewDay = state.health.todayDate !== todayDate;
+    const previousSteps = isNewDay ? 0 : state.health.todaySteps;
+    // Simulated step counter: a bigger jump for a brand-new day, a smaller
+    // top-up on repeat syncs within the same day — steps only ever climb.
+    const increment = isNewDay ? 900 + Math.floor(Math.random() * 1300) : 350 + Math.floor(Math.random() * 900);
+    const eligibleGoalIds = state.goals
+      .filter((g) => isStepsGoal(g) && g.participants.some((p) => p.userId === "me"))
+      .map((g) => g.id);
+
+    setState((prev) =>
+      prev.health
+        ? {
+            ...prev,
+            health: {
+              ...prev.health,
+              todaySteps: previousSteps + increment,
+              todayDate,
+              lastSyncedAt: new Date(now).toISOString(),
+            },
+          }
+        : prev
+    );
+    eligibleGoalIds.forEach((goalId) => logProgress(goalId, increment, "health"));
+  }, [state.health, state.goals, logProgress]);
+
+  const connectHealth = useCallback(
+    (provider: HealthProvider) => {
+      const now = new Date();
+      const initialSteps = 900 + Math.floor(Math.random() * 1300);
+      const eligibleGoalIds = state.goals
+        .filter((g) => isStepsGoal(g) && g.participants.some((p) => p.userId === "me"))
+        .map((g) => g.id);
+
+      setState((prev) => ({
+        ...prev,
+        health: {
+          provider,
+          connectedAt: now.toISOString(),
+          todaySteps: initialSteps,
+          todayDate: now.toDateString(),
+          lastSyncedAt: now.toISOString(),
+        },
+        activity: [
+          {
+            id: `h-${now.getTime()}`,
+            userId: "me",
+            label: `Connected ${provider === "apple" ? "Apple Health" : "Samsung Health"}`,
+            detail: "Steps will auto-sync into eligible goals",
+            createdAt: now.toISOString(),
+          },
+          ...prev.activity,
+        ],
+      }));
+      eligibleGoalIds.forEach((goalId) => logProgress(goalId, initialSteps, "health"));
+    },
+    [state.goals, logProgress]
+  );
+
+  const disconnectHealth = useCallback(() => {
+    setState((prev) => ({ ...prev, health: null }));
+  }, []);
 
   const spendStreakFreeze = useCallback(
     (goalId: string) => {
@@ -622,6 +711,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       activity: state.activity,
       messages: state.messages,
       following: state.following,
+      health: state.health,
       toggleReaction,
       addComment,
       joinGoal,
@@ -636,6 +726,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       sendMessage,
       markThreadRead,
       threads,
+      connectHealth,
+      disconnectHealth,
+      syncHealth,
     }),
     [
       state,
@@ -653,6 +746,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       sendMessage,
       markThreadRead,
       threads,
+      connectHealth,
+      disconnectHealth,
+      syncHealth,
     ]
   );
 

@@ -200,3 +200,20 @@ export interface Thread {
   participantIds: [string, string];
   lastMessageAt: string;
 }
+
+export type HealthProvider = "apple" | "samsung";
+
+/**
+ * A simulated connection to a native health app. Real HealthKit/Samsung Health
+ * data is unreachable from a browser — there is no web API for either — so
+ * this stands in for that native SDK with a realistic, clearly-labeled sync.
+ */
+export interface HealthConnection {
+  provider: HealthProvider;
+  connectedAt: string;
+  /** Running step count the connected app reports for todayDate. */
+  todaySteps: number;
+  /** Calendar day (toDateString()) todaySteps applies to, so a new day resets the count. */
+  todayDate: string;
+  lastSyncedAt?: string;
+}

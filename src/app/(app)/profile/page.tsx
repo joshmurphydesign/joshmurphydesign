@@ -2,13 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useData } from "@/lib/data-context";
 import { TopBar } from "@/components/shell/TopBar";
 import { ProfileView } from "@/components/profile/ProfileView";
 import { Button } from "@/components/ui/Button";
-import { IconEdit } from "@/components/ui/Icons";
+import { Pill } from "@/components/ui/Pill";
+import { IconChevronRight, IconEdit } from "@/components/ui/Icons";
+
+const PROVIDER_LABEL: Record<string, string> = { apple: "Apple Health", samsung: "Samsung Health" };
 
 export default function MyProfilePage() {
   const { user, logout } = useAuth();
+  const { health } = useData();
   const router = useRouter();
 
   if (!user) return null;
@@ -41,6 +46,24 @@ export default function MyProfilePage() {
         </div>
       </div>
       <ProfileView person={user} />
+      <div className="px-5">
+        <button
+          onClick={() => router.push("/profile/health")}
+          className="card-surface flex w-full items-center gap-3 rounded-2xl p-4 text-left"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/8 text-lg">
+            {health ? (health.provider === "apple" ? "\u{1F34E}" : "\u{231A}") : "\u{2795}"}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-chalk-100">Connected apps</p>
+            <p className="text-xs text-chalk-500">
+              {health ? `${PROVIDER_LABEL[health.provider]} · auto-syncing steps` : "Connect Apple or Samsung Health"}
+            </p>
+          </div>
+          {health && <Pill tone="volt">On</Pill>}
+          <IconChevronRight className="h-4 w-4 shrink-0 text-chalk-700" />
+        </button>
+      </div>
       <div className="flex flex-col gap-2.5 px-5">
         <Button variant="outline" size="md" className="w-full" onClick={() => router.push("/profile/edit")}>
           Edit profile

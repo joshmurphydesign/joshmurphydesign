@@ -1,4 +1,4 @@
-import type { GoalCategory, GoalMetric, GoalParticipant, MetricType } from "./types";
+import type { Goal, GoalCategory, GoalMetric, GoalParticipant, MetricType } from "./types";
 
 export interface MetricPreset {
   key: string;
@@ -145,4 +145,9 @@ export function computeProgress(metric: GoalMetric, participant: Pick<GoalPartic
   }
   // decrease
   return Math.max(0, Math.min(100, Math.round(((start - current) / span) * 100)));
+}
+
+/** A cumulative, step-counted goal — the only shape a simulated Health connection can auto-sync. */
+export function isStepsGoal(goal: Pick<Goal, "metric" | "category" | "unit">): boolean {
+  return goal.metric.type === "cumulative" && (goal.category === "steps" || /steps?/i.test(goal.unit));
 }

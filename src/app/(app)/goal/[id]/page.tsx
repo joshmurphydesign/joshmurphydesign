@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { pointsForPlacement, useData } from "@/lib/data-context";
+import { isStepsGoal } from "@/lib/metric-presets";
 import { useUserMap } from "@/lib/people";
 import { TopBar } from "@/components/shell/TopBar";
 import { Pill } from "@/components/ui/Pill";
@@ -12,9 +13,9 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { IconCamera, IconCheck } from "@/components/ui/Icons";
+import { IconCamera, IconCheck, IconChevronRight } from "@/components/ui/Icons";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { categoryEmoji, daysUntil, isToday, modeLabel } from "@/lib/utils";
+import { categoryEmoji, daysUntil, isToday, modeLabel, timeAgo } from "@/lib/utils";
 
 function formatValue(n: number): string {
   return n.toLocaleString();
@@ -30,7 +31,7 @@ const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
 export default function GoalDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { goals, posts, joinGoal, logProgress, spendStreakFreeze, settleGoal } = useData();
+  const { goals, posts, health, joinGoal, logProgress, spendStreakFreeze, settleGoal } = useData();
   const userMap = useUserMap();
 
   const goal = goals.find((g) => g.id === params.id);
@@ -68,6 +69,9 @@ export default function GoalDetailPage() {
   // logging again today just adds another entry instead of being locked out.
   const isCumulative = metric.type === "cumulative";
   const canLogMore = isCumulative || !loggedToday;
+  const stepsGoal = isStepsGoal(goal);
+  const healthProviderLabel = health?.provider === "apple" ? "Apple Health" : health?.provider === "samsung" ? "Samsung Health" : undefined;
+  const healthProviderEmoji = health?.provider === "apple" ? "\u{1F34E}" : "\u{231A}";
 
   const submitLog = () => {
     if (!needsNumericLog) {
@@ -143,6 +147,28 @@ export default function GoalDetailPage() {
             <span className="font-bold text-chalk-100">{goal.progress}%</span>
           </div>
           <ProgressBar value={goal.progress} className="mt-2" height={10} />
+
+          {iAmIn && stepsGoal && (
+            <Link
+              href="/profile/health"
+              className="mt-4 flex items-center gap-2.5 rounded-2xl bg-white/5 px-3.5 py-3"
+            >
+              <span className="text-base">{health ? healthProviderEmoji : "\u{1F45F}"}</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-chalk-100">
+                  {health ? `Synced from ${healthProviderLabel}` : "Connect to auto-log your steps"}
+                </p>
+                <p className="text-[11px] text-chalk-500">
+                  {health
+                    ? health.lastSyncedAt
+                      ? `Last synced ${timeAgo(health.lastSyncedAt)}`
+                      : "Not yet synced"
+                    : "Apple Health or Samsung Health"}
+                </p>
+              </div>
+              <IconChevronRight className="h-4 w-4 shrink-0 text-chalk-700" />
+            </Link>
+          )}
 
           {iAmIn ? (
             <div className="mt-4 flex flex-col gap-2">
