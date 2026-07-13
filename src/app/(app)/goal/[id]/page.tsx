@@ -64,6 +64,10 @@ export default function GoalDetailPage() {
   const metric = goal.metric;
   const needsNumericLog = metric.type !== "binary";
   const needsBaseline = metric.type === "increase" || metric.type === "decrease";
+  // Cumulative goals (steps, reps, distance...) are naturally multi-session, so
+  // logging again today just adds another entry instead of being locked out.
+  const isCumulative = metric.type === "cumulative";
+  const canLogMore = isCumulative || !loggedToday;
 
   const submitLog = () => {
     if (!needsNumericLog) {
@@ -149,31 +153,29 @@ export default function GoalDetailPage() {
                     : `Currently ${formatValue(me.currentValue ?? me.startValue ?? 0)} ${goal.unit} · started at ${formatValue(me.startValue ?? 0)} ${goal.unit}`}
                 </p>
               )}
-              {needsNumericLog && !loggedToday && (
+              {needsNumericLog && canLogMore && (
                 <input
                   type="number"
                   inputMode="decimal"
                   value={logValue}
                   onChange={(e) => setLogValue(e.target.value)}
-                  placeholder={
-                    metric.type === "cumulative"
-                      ? `Add ${goal.unit} logged today`
-                      : `Today's ${goal.unit}`
-                  }
+                  placeholder={isCumulative ? `Add ${goal.unit} logged today` : `Today's ${goal.unit}`}
                   className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
                 />
               )}
               <Button
                 onClick={submitLog}
-                disabled={loggedToday || (needsNumericLog && logValue.trim() === "")}
-                variant={loggedToday ? "ghost" : "volt"}
+                disabled={!canLogMore || (needsNumericLog && logValue.trim() === "")}
+                variant={!canLogMore ? "ghost" : "volt"}
                 size="md"
                 className="w-full"
               >
-                {loggedToday ? (
+                {!canLogMore ? (
                   <>
                     <IconCheck className="h-4 w-4" /> Logged today
                   </>
+                ) : isCumulative && loggedToday ? (
+                  "Add more today"
                 ) : (
                   "Log today's progress"
                 )}

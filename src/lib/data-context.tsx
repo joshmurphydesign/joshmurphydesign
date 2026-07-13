@@ -383,15 +383,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const goal = prev.goals.find((g) => g.id === goalId);
         if (!goal) return prev;
         const me = goal.participants.find((p) => p.userId === "me");
-        if (!me || (me.lastLoggedAt && isSameDay(me.lastLoggedAt, now))) return prev;
+        if (!me) return prev;
 
         const metric = goal.metric;
+        // Cumulative goals (steps, reps, distance...) are naturally multi-session —
+        // you might log a morning run and an evening run the same day. Every other
+        // metric is a once-daily snapshot or habit check, so it keeps the daily cap.
+        const isCumulative = metric.type === "cumulative";
+        const alreadyLoggedToday = !!me.lastLoggedAt && isSameDay(me.lastLoggedAt, now);
+        if (alreadyLoggedToday && !isCumulative) return prev;
+
         let nextCurrentValue = me.currentValue;
         let nextProgress: number;
         if (metric.type === "binary") {
           const step = Math.max(1, Math.round(100 / goal.durationDays));
           nextProgress = Math.min(100, me.progress + step);
-        } else if (metric.type === "cumulative") {
+        } else if (isCumulative) {
           nextCurrentValue = (me.currentValue ?? 0) + (value ?? 0);
           nextProgress = computeProgress(metric, { progress: me.progress, startValue: me.startValue, currentValue: nextCurrentValue });
         } else {
@@ -399,8 +406,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           nextProgress = computeProgress(metric, { progress: me.progress, startValue: me.startValue, currentValue: nextCurrentValue });
         }
 
-        const continuing = !!me.lastLoggedAt && isYesterday(me.lastLoggedAt, now);
-        const nextStreak = continuing ? goal.streak + 1 : 1;
+        // A same-day repeat log (cumulative only) doesn't move the streak at all —
+        // it neither extends it again nor resets it, since the day is already counted.
+        const nextStreak = alreadyLoggedToday
+          ? goal.streak
+          : !!me.lastLoggedAt && isYesterday(me.lastLoggedAt, now)
+            ? goal.streak + 1
+            : 1;
 
         const nowIso = new Date(now).toISOString();
         const updatedParticipants = goal.participants.map((p) =>
@@ -410,14 +422,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           updatedParticipants.reduce((sum, p) => sum + p.progress, 0) / updatedParticipants.length
         );
 
-        const milestone = nextStreak > 0 && nextStreak % 7 === 0;
+        const milestone = !alreadyLoggedToday && nextStreak > 0 && nextStreak % 7 === 0;
         if (milestone) adjustFreezes(1);
 
         const hitTarget = nextProgress >= 100 && me.progress < 100;
         const valueLabel =
           metric.type === "binary"
             ? undefined
-            : metric.type === "cumulative"
+            : isCumulative
               ? `${nextCurrentValue} ${goal.unit} logged`
               : `${nextCurrentValue} ${goal.unit}`;
         const post: Post = {
@@ -429,13 +441,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             ? `Hit the target on ${goal.title}`
             : milestone
               ? `${nextStreak}-day streak on ${goal.title}`
-              : `Logged progress on ${goal.title}`,
+              : alreadyLoggedToday
+                ? `Added more to ${goal.title}`
+                : `Logged progress on ${goal.title}`,
           body: hitTarget
             ? "Target complete. Show up, stand out — mission accomplished."
             : milestone
               ? `${nextStreak} days in a row. Earned a streak freeze for staying consistent.`
               : valueLabel
-                ? `Day ${nextStreak} logged — ${valueLabel}. ${nextProgress}% of the way there.`
+                ? `${alreadyLoggedToday ? "Another entry" : `Day ${nextStreak} logged`} — ${valueLabel}. ${nextProgress}% of the way there.`
                 : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`,
           statValue: `${nextProgress}%`,
           statLabel: "progress",
@@ -456,7 +470,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             {
               id: `h-${now}`,
               userId: "me",
-              label: `Logged progress`,
+              label: alreadyLoggedToday ? "Logged more progress" : "Logged progress",
               detail: `${goal.title} — day ${nextStreak}`,
               createdAt: nowIso,
             },
