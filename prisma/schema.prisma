@@ -1,9 +1,10 @@
 // Ascend backend schema.
 //
-// Datasource is SQLite for zero-setup local/sandbox development. Field types
-// below are deliberately kept Postgres-compatible (no SQLite-only types) so
-// switching `provider = "sqlite"` to `"postgresql"` and pointing DATABASE_URL
-// at a real database is the only change needed to deploy for real.
+// Postgres via the standard `pg` driver adapter — works against any
+// Postgres-compatible host (Neon, Supabase, Vercel Postgres, Railway, RDS,
+// etc.) through a single DATABASE_URL connection string. For serverless
+// hosting (Vercel), use your provider's *pooled* connection string, since
+// each function invocation opens its own connection.
 //
 // Scope note: PowerPlay/Competition and Health-connection data intentionally
 // have no models here — they stay client-side mock/local state for this pass.
@@ -13,7 +14,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
