@@ -84,7 +84,7 @@ interface DataContextValue {
   following: string[];
   toggleReaction: (postId: string, emoji: string) => void;
   addComment: (postId: string, text: string) => void;
-  joinGoal: (goalId: string) => boolean;
+  joinGoal: (goalId: string) => void;
   joinPowerPlay: (powerPlayId: string) => void;
   createGoal: (params: {
     title: string;
@@ -95,13 +95,13 @@ interface DataContextValue {
     unit: string;
     durationDays: number;
     inviteeIds: string[];
-    stake: number;
-  }) => Goal | null;
+    stake?: string;
+  }) => Goal;
   markNotificationsRead: () => void;
   createPost: (params: { body: string; imageUrl?: string; goalId?: string }) => void;
   logProgress: (goalId: string) => void;
   spendStreakFreeze: (goalId: string) => void;
-  settleStakes: (goalId: string) => void;
+  settleGoal: (goalId: string) => void;
   toggleFollow: (userId: string) => void;
   sendMessage: (otherUserId: string, text: string) => void;
   markThreadRead: (otherUserId: string) => void;
@@ -117,6 +117,20 @@ const GRADIENTS = [
   "linear-gradient(135deg,#0f5132,#c8ff3d)",
   "linear-gradient(135deg,#ff3b5c,#0b3f7a)",
 ];
+
+const DUEL_WIN_POINTS = 100;
+const CHALLENGE_PLACE_POINTS = [300, 150, 75];
+const CHALLENGE_PARTICIPATION_POINTS = 25;
+
+export function pointsForPlacement(mode: GoalMode, rank: number): number {
+  if (mode === "duel") return rank === 1 ? DUEL_WIN_POINTS : 0;
+  if (mode === "challenge") {
+    return rank <= CHALLENGE_PLACE_POINTS.length
+      ? CHALLENGE_PLACE_POINTS[rank - 1]
+      : CHALLENGE_PARTICIPATION_POINTS;
+  }
+  return 0;
+}
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const { adjustPoints, adjustFreezes, user } = useAuth();
@@ -177,38 +191,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const joinGoal = useCallback(
-    (goalId: string): boolean => {
-      const goal = state.goals.find((g) => g.id === goalId);
-      if (!goal || goal.participants.some((p) => p.userId === "me")) return false;
-      const stake = goal.stake ?? 0;
-      if (stake > 0 && (user?.points ?? 0) < stake) return false;
-      if (stake > 0) adjustPoints(-stake);
-      setState((prev) => ({
+  const joinGoal = useCallback((goalId: string) => {
+    setState((prev) => {
+      const goal = prev.goals.find((g) => g.id === goalId);
+      if (!goal || goal.participants.some((p) => p.userId === "me")) return prev;
+      return {
         ...prev,
         goals: prev.goals.map((g) =>
           g.id !== goalId
             ? g
             : {
                 ...g,
-                pot: stake > 0 ? (g.pot ?? 0) + stake : g.pot,
                 participants: [
                   ...g.participants,
-                  {
-                    userId: "me",
-                    progress: 0,
-                    joinedAt: new Date().toISOString(),
-                    isOwner: false,
-                    stakePaid: stake > 0 ? stake : undefined,
-                  },
+                  { userId: "me", progress: 0, joinedAt: new Date().toISOString(), isOwner: false },
                 ],
               }
         ),
-      }));
-      return true;
-    },
-    [state.goals, user, adjustPoints]
-  );
+      };
+    });
+  }, []);
 
   const joinPowerPlay = useCallback((powerPlayId: string) => {
     setState((prev) => ({
@@ -238,10 +240,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       unit: string;
       durationDays: number;
       inviteeIds: string[];
-      stake: number;
-    }): Goal | null => {
-      const stake = Math.max(0, params.stake || 0);
-      if (stake > 0 && (user?.points ?? 0) < stake) return null;
+      stake?: string;
+    }): Goal => {
       const now = new Date();
       const end = new Date(now.getTime() + params.durationDays * 86400 * 1000);
       const goal: Goal = {
@@ -259,10 +259,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         progress: 0,
         streak: 0,
         coverGradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)],
-        stake: stake > 0 ? stake : undefined,
-        pot: stake > 0 ? stake : undefined,
+        stake: params.stake || undefined,
         participants: [
-          { userId: "me", progress: 0, joinedAt: now.toISOString(), isOwner: true, stakePaid: stake > 0 ? stake : undefined },
+          { userId: "me", progress: 0, joinedAt: now.toISOString(), isOwner: true },
           ...params.inviteeIds.map((id) => ({
             userId: id,
             progress: 0,
@@ -271,7 +270,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           })),
         ],
       };
-      if (stake > 0) adjustPoints(-stake);
       setState((prev) => ({
         ...prev,
         goals: [goal, ...prev.goals],
@@ -290,7 +288,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }));
       return goal;
     },
-    [user, adjustPoints]
+    []
   );
 
   const markNotificationsRead = useCallback(() => {
@@ -473,26 +471,29 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user, adjustFreezes]
   );
 
-  const settleStakes = useCallback(
+  const settleGoal = useCallback(
     (goalId: string) => {
       const now = new Date();
-      let payout = 0;
-      let winnerIsMe = false;
+      let myAward = 0;
       setState((prev) => {
         const goal = prev.goals.find((g) => g.id === goalId);
-        if (!goal || goal.settledAt || !goal.pot) return prev;
-        const winner = [...goal.participants].sort((a, b) => b.progress - a.progress)[0];
-        payout = goal.pot;
-        winnerIsMe = winner.userId === "me";
+        if (!goal || goal.settledAt) return prev;
+        const ranked = [...goal.participants].sort((a, b) => b.progress - a.progress);
+        const winner = ranked[0];
+        const myRank = ranked.findIndex((p) => p.userId === "me");
+        if (myRank >= 0) myAward = pointsForPlacement(goal.mode, myRank + 1);
+        const winnerPoints = pointsForPlacement(goal.mode, 1);
         const post: Post = {
           id: `p-${now.getTime()}`,
           userId: winner.userId,
           goalId: goal.id,
           type: "competition-result",
-          headline: `Won the pot on ${goal.title}`,
-          body: `Took the top spot and claimed the ${goal.pot}-point pot.`,
-          statValue: `${goal.pot} pts`,
-          statLabel: "pot won",
+          headline: `Won ${goal.title}`,
+          body: goal.stake
+            ? `Took the top spot — ${goal.stake}. Earned ${winnerPoints} points.`
+            : `Took the top spot and earned ${winnerPoints} points.`,
+          statValue: `+${winnerPoints}`,
+          statLabel: "points",
           createdAt: now.toISOString(),
           reactions: [],
           comments: [],
@@ -507,7 +508,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           posts: [post, ...prev.posts],
         };
       });
-      if (winnerIsMe && payout > 0) adjustPoints(payout);
+      if (myAward > 0) adjustPoints(myAward);
     },
     [adjustPoints]
   );
@@ -581,7 +582,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       createPost,
       logProgress,
       spendStreakFreeze,
-      settleStakes,
+      settleGoal,
       toggleFollow,
       sendMessage,
       markThreadRead,
@@ -598,7 +599,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       createPost,
       logProgress,
       spendStreakFreeze,
-      settleStakes,
+      settleGoal,
       toggleFollow,
       sendMessage,
       markThreadRead,

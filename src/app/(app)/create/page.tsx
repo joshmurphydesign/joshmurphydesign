@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { useData } from "@/lib/data-context";
 import { USERS } from "@/lib/mock-data";
 import { TopBar } from "@/components/shell/TopBar";
@@ -37,9 +36,17 @@ const STEP_LABELS = ["Category", "Details", "Rally", "Publish"];
 
 const STAKE_MODES: GoalMode[] = ["challenge", "duel"];
 
+const STAKE_PRESETS = [
+  { key: "bragging", label: "🏆 Bragging rights" },
+  { key: "coffee", label: "☕ Loser buys coffee" },
+  { key: "dinner", label: "🍽️ Loser buys dinner" },
+  { key: "burpees", label: "🔥 Loser does 50 burpees" },
+  { key: "chore", label: "🧹 Loser does the chores" },
+  { key: "playlist", label: "🎧 Winner picks the playlist" },
+];
+
 export default function CreateGoalPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const { createGoal } = useData();
   const [step, setStep] = useState(0);
 
@@ -50,21 +57,23 @@ export default function CreateGoalPage() {
   const [target, setTarget] = useState("");
   const [unit, setUnit] = useState("");
   const [durationDays, setDurationDays] = useState(30);
+  const [editingDuration, setEditingDuration] = useState(false);
   const [inviteeIds, setInviteeIds] = useState<string[]>([]);
-  const [stake, setStake] = useState("");
-  const [publishError, setPublishError] = useState<string | null>(null);
+  const [stakePreset, setStakePreset] = useState<string | null>(null);
+  const [customStake, setCustomStake] = useState("");
 
   const toggleInvitee = (id: string) => {
     setInviteeIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
-  const stakeAmount = Math.max(0, Number(stake) || 0);
-  const myPoints = user?.points ?? 0;
-  const stakeTooHigh = STAKE_MODES.includes(mode) && stakeAmount > myPoints;
+  const finalStake =
+    stakePreset === "custom"
+      ? customStake.trim()
+      : STAKE_PRESETS.find((p) => p.key === stakePreset)?.label ?? "";
 
   const canAdvance = [
     !!category,
-    title.trim().length > 1 && target.trim().length > 0 && unit.trim().length > 0 && !stakeTooHigh,
+    title.trim().length > 1 && target.trim().length > 0 && unit.trim().length > 0,
     true,
     true,
   ][step];
@@ -80,12 +89,8 @@ export default function CreateGoalPage() {
       unit: unit.trim(),
       durationDays,
       inviteeIds,
-      stake: STAKE_MODES.includes(mode) ? stakeAmount : 0,
+      stake: STAKE_MODES.includes(mode) ? finalStake || undefined : undefined,
     });
-    if (!goal) {
-      setPublishError("Not enough points to cover that stake.");
-      return;
-    }
     router.replace(`/goal/${goal.id}`);
   };
 
@@ -203,34 +208,87 @@ export default function CreateGoalPage() {
               />
             </Field>
           </div>
-          <Field label={`Duration — ${durationDays} days`}>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">Duration</span>
+              {editingDuration ? (
+                <input
+                  type="number"
+                  min={1}
+                  autoFocus
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(Math.max(1, Number(e.target.value) || 1))}
+                  onBlur={() => setEditingDuration(false)}
+                  onKeyDown={(e) => e.key === "Enter" && setEditingDuration(false)}
+                  className="w-20 rounded-lg border border-white/8 bg-white/5 px-2 py-1 text-right text-xs font-bold text-chalk-100 outline-none focus:border-ascend-blue"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditingDuration(true)}
+                  className="text-xs font-bold text-chalk-100 underline decoration-chalk-500 decoration-dotted underline-offset-4"
+                >
+                  {durationDays} days
+                </button>
+              )}
+            </div>
             <input
               type="range"
               min={3}
               max={90}
-              value={durationDays}
+              value={Math.min(90, Math.max(3, durationDays))}
               onChange={(e) => setDurationDays(Number(e.target.value))}
               className="accent-[#1379c9]"
             />
-          </Field>
+            <p className="text-xs text-chalk-700">Drag for up to 90 days, or tap the number to set any length.</p>
+          </div>
           {STAKE_MODES.includes(mode) && (
-            <Field label="Points wager (optional)">
-              <input
-                inputMode="numeric"
-                value={stake}
-                onChange={(e) => setStake(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="0"
-                className={cn(
-                  "rounded-2xl border bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue",
-                  stakeTooHigh ? "border-rival-500/50" : "border-white/8"
-                )}
-              />
-              <p className={cn("text-xs", stakeTooHigh ? "text-rival-500" : "text-chalk-500")}>
-                {stakeTooHigh
-                  ? `You only have ${myPoints} points available.`
-                  : `Everyone who joins matches your stake. Winner takes the pot. You have ${myPoints} points.`}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">
+                What&apos;s on the line? <span className="text-chalk-700">(optional)</span>
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {STAKE_PRESETS.map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setStakePreset((prev) => (prev === p.key ? null : p.key))}
+                    className={cn(
+                      "rounded-pill border px-3.5 py-2 text-xs font-semibold transition-colors",
+                      stakePreset === p.key
+                        ? "border-volt-500/40 bg-volt-500/10 text-volt-400"
+                        : "border-white/8 bg-white/5 text-chalk-300"
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setStakePreset((prev) => (prev === "custom" ? null : "custom"))}
+                  className={cn(
+                    "rounded-pill border px-3.5 py-2 text-xs font-semibold transition-colors",
+                    stakePreset === "custom"
+                      ? "border-volt-500/40 bg-volt-500/10 text-volt-400"
+                      : "border-white/8 bg-white/5 text-chalk-300"
+                  )}
+                >
+                  ✏️ Custom
+                </button>
+              </div>
+              {stakePreset === "custom" && (
+                <input
+                  value={customStake}
+                  onChange={(e) => setCustomStake(e.target.value)}
+                  placeholder="e.g. Loser does the dishes for a week"
+                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                />
+              )}
+              <p className="text-xs text-chalk-500">
+                No points required to join — everyone just needs to hold up their end. Points are earned
+                automatically for the win.
               </p>
-            </Field>
+            </div>
           )}
         </div>
       )}
@@ -293,14 +351,15 @@ export default function CreateGoalPage() {
             <SummaryRow label="Duration" value={`${durationDays} days`} />
             <SummaryRow label="Target" value={`${target || "—"} ${unit}`} />
             <SummaryRow label="Rally" value={`${inviteeIds.length} invited`} />
-            {STAKE_MODES.includes(mode) && stakeAmount > 0 && (
-              <>
-                <SummaryRow label="Your stake" value={`${stakeAmount} pts`} />
-                <SummaryRow label="Starting pot" value={`${stakeAmount} pts`} />
-              </>
+            {STAKE_MODES.includes(mode) && finalStake && (
+              <div className="card-surface col-span-2 rounded-2xl p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">
+                  What&apos;s on the line
+                </p>
+                <p className="mt-0.5 font-bold text-chalk-100">{finalStake}</p>
+              </div>
             )}
           </div>
-          {publishError && <p className="text-sm font-semibold text-rival-500">{publishError}</p>}
           <Button onClick={publish} variant="volt" size="lg" className="mt-2 w-full">
             Publish {modeLabel(mode)}
           </Button>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { useData } from "@/lib/data-context";
+import { pointsForPlacement, useData } from "@/lib/data-context";
 import { useUserMap } from "@/lib/people";
 import { TopBar } from "@/components/shell/TopBar";
 import { Pill } from "@/components/ui/Pill";
@@ -26,9 +26,8 @@ const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
 export default function GoalDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { goals, posts, joinGoal, logProgress, spendStreakFreeze, settleStakes } = useData();
+  const { goals, posts, joinGoal, logProgress, spendStreakFreeze, settleGoal } = useData();
   const userMap = useUserMap();
-  const [joinError, setJoinError] = useState<string | null>(null);
 
   const goal = goals.find((g) => g.id === params.id);
   const [daysLeft] = useState(() => daysUntil(goal?.endDate ?? new Date().toISOString()));
@@ -53,12 +52,8 @@ export default function GoalDetailPage() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const winner = goal.winnerId ? userMap[goal.winnerId] : undefined;
-
-  const handleJoin = () => {
-    setJoinError(null);
-    const ok = joinGoal(goal.id);
-    if (!ok) setJoinError("Not enough points to cover this stake.");
-  };
+  const isCompetitive = goal.mode === "challenge" || goal.mode === "duel";
+  const winnerPoints = pointsForPlacement(goal.mode, 1);
 
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -87,20 +82,18 @@ export default function GoalDetailPage() {
         <MiniStat label="Streak" value={String(goal.streak)} sub="days" />
       </div>
 
-      {!!goal.stake && (
+      {isCompetitive && (
         <div className="px-5">
-          <div className="card-surface-raised flex items-center justify-between rounded-2xl p-4">
+          <div className="card-surface-raised flex items-center justify-between gap-3 rounded-2xl p-4">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">Pot on the line</p>
-              <p className="mt-0.5 font-display text-xl text-gold-500">{"\u{1FA99}"} {goal.pot} pts</p>
-              {me?.stakePaid !== undefined && (
-                <p className="mt-0.5 text-xs text-chalk-500">Your stake: {me.stakePaid} pts</p>
-              )}
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">What&apos;s on the line</p>
+              <p className="mt-0.5 font-bold text-chalk-100">{goal.stake || "Bragging rights"}</p>
+              <p className="mt-1 text-xs text-chalk-500">Winner earns {winnerPoints} pts automatically.</p>
             </div>
             {goal.settledAt ? (
               <Pill tone="gold">{winner ? `${winner.name.split(" ")[0]} won` : "Settled"}</Pill>
             ) : iAmOwner ? (
-              <Button onClick={() => settleStakes(goal.id)} variant="outline" size="sm">
+              <Button onClick={() => settleGoal(goal.id)} variant="outline" size="sm">
                 End & settle
               </Button>
             ) : null}
@@ -151,10 +144,9 @@ export default function GoalDetailPage() {
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
-              <Button onClick={handleJoin} variant="volt" size="md" className="w-full">
-                {goal.stake ? `Join for ${goal.stake} pts` : `Join this ${modeLabel(goal.mode).toLowerCase()}`}
+              <Button onClick={() => joinGoal(goal.id)} variant="volt" size="md" className="w-full">
+                Join this {modeLabel(goal.mode).toLowerCase()}
               </Button>
-              {joinError && <p className="text-xs font-semibold text-rival-500">{joinError}</p>}
             </div>
           )}
         </div>

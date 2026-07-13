@@ -38,7 +38,6 @@ export interface GoalParticipant {
   joinedAt: string;
   isOwner: boolean;
   lastLoggedAt?: string;
-  stakePaid?: number;
 }
 
 export interface Goal {
@@ -57,8 +56,8 @@ export interface Goal {
   participants: GoalParticipant[];
   streak: number;
   coverGradient: string;
-  stake?: number;
-  pot?: number;
+  /** What's on the line — flavor text, e.g. "☕ Loser buys coffee". No points cost to join. */
+  stake?: string;
   settledAt?: string;
   winnerId?: string;
   isPublic?: boolean;
