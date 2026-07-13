@@ -57,7 +57,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
           <p className="relative mt-4 text-sm leading-relaxed text-chalk-300">{person.bio}</p>
           <div className="relative mt-4 flex flex-wrap gap-1.5">
             {person.focus.map((f) => (
-              <Pill key={f} tone="violet">
+              <Pill key={f} tone="blue">
                 {categoryEmoji(f)} {categoryLabel(f)}
               </Pill>
             ))}

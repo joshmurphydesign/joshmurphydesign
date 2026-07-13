@@ -116,7 +116,7 @@ export default function CreateGoalPage() {
                   className={cn(
                     "flex items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition-colors",
                     mode === m.mode
-                      ? "border-ascend-violet/40 bg-ascend-violet/10"
+                      ? "border-ascend-blue/40 bg-ascend-blue/10"
                       : "border-white/8 bg-white/5"
                   )}
                 >
@@ -124,7 +124,7 @@ export default function CreateGoalPage() {
                     <p className="text-sm font-bold text-chalk-100">{modeLabel(m.mode)}</p>
                     <p className="text-xs text-chalk-500">{m.desc}</p>
                   </div>
-                  {mode === m.mode && <Pill tone="violet">Selected</Pill>}
+                  {mode === m.mode && <Pill tone="blue">Selected</Pill>}
                 </button>
               ))}
             </div>
@@ -158,7 +158,7 @@ export default function CreateGoalPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. 100 Push-Ups Daily"
-              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             />
           </Field>
           <Field label="Description">
@@ -167,7 +167,7 @@ export default function CreateGoalPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's the mission?"
               rows={3}
-              className="resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+              className="resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             />
           </Field>
           <div className="grid grid-cols-2 gap-3">
@@ -176,7 +176,7 @@ export default function CreateGoalPage() {
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
                 placeholder="100"
-                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
               />
             </Field>
             <Field label="Unit">
@@ -184,7 +184,7 @@ export default function CreateGoalPage() {
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 placeholder="push-ups / day"
-                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
               />
             </Field>
           </div>
@@ -195,7 +195,7 @@ export default function CreateGoalPage() {
               max={90}
               value={durationDays}
               onChange={(e) => setDurationDays(Number(e.target.value))}
-              className="accent-[#6a4cff]"
+              className="accent-[#1379c9]"
             />
           </Field>
         </div>
@@ -242,7 +242,7 @@ export default function CreateGoalPage() {
         <div className="flex flex-col gap-4 px-5">
           <div
             className="relative overflow-hidden rounded-[var(--radius-card)] p-6"
-            style={{ background: "linear-gradient(135deg,#3d2ee0,#ff5c3d)" }}
+            style={{ background: "linear-gradient(135deg,#0b3f7a,#35c2f2)" }}
           >
             <div className="noise-overlay absolute inset-0" />
             <div className="relative flex items-center justify-between">

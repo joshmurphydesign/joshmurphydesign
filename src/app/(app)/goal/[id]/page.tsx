@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/Button";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { categoryEmoji, daysUntil, modeLabel } from "@/lib/utils";
 
-const MODE_TONE: Record<string, "violet" | "rival" | "volt" | "gold"> = {
-  goal: "violet",
+const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
+  goal: "blue",
   challenge: "gold",
   duel: "rival",
   quest: "volt",

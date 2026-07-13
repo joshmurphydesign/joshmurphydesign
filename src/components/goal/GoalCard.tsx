@@ -6,8 +6,8 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { AvatarStack } from "@/components/ui/AvatarStack";
 
-const MODE_TONE: Record<string, "violet" | "rival" | "volt" | "gold"> = {
-  goal: "violet",
+const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
+  goal: "blue",
   challenge: "gold",
   duel: "rival",
   quest: "volt",

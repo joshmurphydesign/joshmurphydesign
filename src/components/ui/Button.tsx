@@ -21,11 +21,11 @@ export function Button({
   };
 
   const variants: Record<Variant, string> = {
-    primary: "bg-ascend-gradient text-white shadow-[var(--shadow-glow-violet)]",
+    primary: "bg-ascend-gradient text-white shadow-[var(--shadow-glow-blue)]",
     volt: "bg-volt-gradient text-ink-950 shadow-[var(--shadow-glow-volt)]",
     ghost: "bg-white/5 text-chalk-100 hover:bg-white/10",
     outline: "border border-white/15 text-chalk-100 hover:bg-white/5",
-    danger: "bg-rival-500/15 text-[#ff8fae] border border-rival-500/30",
+    danger: "bg-rival-500/15 text-[#ff8fa0] border border-rival-500/30",
   };
 
   return (

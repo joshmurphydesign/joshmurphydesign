@@ -49,7 +49,7 @@ export default function HomePage() {
       </header>
 
       <div className="grid grid-cols-3 gap-3 px-5">
-        <StatTile icon={<IconFlame className="h-4 w-4" />} value={myGoals.length} label="Active goals" tone="violet" />
+        <StatTile icon={<IconFlame className="h-4 w-4" />} value={myGoals.length} label="Active goals" tone="blue" />
         <StatTile icon={<IconTrophy className="h-4 w-4" />} value={`#${bestRank?.rank ?? "-"}`} label="Best rank" tone="gold" />
         <StatTile icon={<span className="text-sm">{"\u{1F525}"}</span>} value={user.streak} label="Day streak" tone="volt" />
       </div>
@@ -124,9 +124,9 @@ function StatTile({
   icon: React.ReactNode;
   value: string | number;
   label: string;
-  tone: "violet" | "gold" | "volt";
+  tone: "blue" | "gold" | "volt";
 }) {
-  const toneText = { violet: "text-[#b6a6ff]", gold: "text-gold-500", volt: "text-volt-400" }[tone];
+  const toneText = { blue: "text-[#7dc4ef]", gold: "text-gold-500", volt: "text-volt-400" }[tone];
   return (
     <div className="card-surface flex flex-col gap-2 rounded-2xl p-3.5">
       <span className={toneText}>{icon}</span>

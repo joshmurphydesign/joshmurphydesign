@@ -59,7 +59,7 @@ export function LoginScreen() {
         className="pointer-events-none absolute inset-0 opacity-60"
         style={{
           background:
-            "radial-gradient(55% 35% at 15% 0%, rgba(106,76,255,0.28) 0%, rgba(0,0,0,0) 70%), radial-gradient(45% 30% at 100% 15%, rgba(255,92,61,0.2) 0%, rgba(0,0,0,0) 70%)",
+            "radial-gradient(55% 35% at 15% 0%, rgba(19,121,201,0.28) 0%, rgba(0,0,0,0) 70%), radial-gradient(45% 30% at 100% 15%, rgba(53,194,242,0.18) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
 
@@ -132,7 +132,7 @@ export function LoginScreen() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Jordan Ellis"
-              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
               autoComplete="name"
             />
           </label>
@@ -145,7 +145,7 @@ export function LoginScreen() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@ascend.app"
-            className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+            className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             autoComplete="email"
           />
         </label>
@@ -157,7 +157,7 @@ export function LoginScreen() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+            className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
           />
         </label>

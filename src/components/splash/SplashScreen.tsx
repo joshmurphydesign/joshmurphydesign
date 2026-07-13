@@ -14,7 +14,7 @@ export function SplashScreen() {
         className="pointer-events-none absolute inset-0 opacity-70"
         style={{
           background:
-            "radial-gradient(60% 45% at 50% 30%, rgba(106,76,255,0.35) 0%, rgba(0,0,0,0) 70%), radial-gradient(50% 40% at 70% 75%, rgba(255,92,61,0.25) 0%, rgba(0,0,0,0) 70%)",
+            "radial-gradient(60% 45% at 50% 30%, rgba(19,121,201,0.35) 0%, rgba(0,0,0,0) 70%), radial-gradient(50% 40% at 70% 75%, rgba(53,194,242,0.22) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
 

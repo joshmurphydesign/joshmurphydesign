@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const RANK_STYLE: Record<number, string> = {
   1: "bg-gold-500/15 text-gold-500 border border-gold-500/30",
   2: "bg-white/10 text-chalk-100 border border-white/15",
-  3: "bg-[#ff5c3d]/15 text-[#ff8a5c] border border-[#ff5c3d]/30",
+  3: "bg-[#ff8a3d]/15 text-[#ffab6b] border border-[#ff8a3d]/30",
 };
 
 export function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
@@ -18,7 +18,7 @@ export function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
     <div
       className={cn(
         "flex items-center gap-3 rounded-2xl px-3.5 py-3",
-        isMe ? "card-surface-raised border border-ascend-violet/30" : "card-surface"
+        isMe ? "card-surface-raised border border-ascend-blue/30" : "card-surface"
       )}
     >
       <div

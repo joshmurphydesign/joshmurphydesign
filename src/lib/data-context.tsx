@@ -75,11 +75,11 @@ interface DataContextValue {
 const DataContext = createContext<DataContextValue | null>(null);
 
 const GRADIENTS = [
-  "linear-gradient(135deg,#3d2ee0,#ff5c3d)",
-  "linear-gradient(135deg,#6a4cff,#3dd6ff)",
-  "linear-gradient(135deg,#ffc23d,#ff2d6b)",
+  "linear-gradient(135deg,#0b3f7a,#35c2f2)",
+  "linear-gradient(135deg,#1379c9,#3dd6ff)",
+  "linear-gradient(135deg,#ffc23d,#ff3b5c)",
   "linear-gradient(135deg,#0f5132,#c8ff3d)",
-  "linear-gradient(135deg,#ff2d6b,#3d2ee0)",
+  "linear-gradient(135deg,#ff3b5c,#0b3f7a)",
 ];
 
 export function DataProvider({ children }: { children: React.ReactNode }) {

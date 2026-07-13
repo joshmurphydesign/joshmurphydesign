@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, Manrope } from "next/font/google";
+import { Archivo_Black, Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { DataProvider } from "@/lib/data-context";
 
-const anton = Anton({
-  variable: "--font-anton",
+const archivoBlack = Archivo_Black({
+  variable: "--font-archivo-black",
   subsets: ["latin"],
   weight: "400",
 });
@@ -27,7 +27,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#07070a",
+  themeColor: "#08090d",
 };
 
 export default function RootLayout({
@@ -38,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${anton.variable} ${manrope.variable} h-full antialiased`}
+      className={`${archivoBlack.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-ink-950 text-chalk-100">
         <AuthProvider>

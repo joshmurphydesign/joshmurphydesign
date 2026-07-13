@@ -38,7 +38,7 @@ function buildProfile(name: string, email: string, focus: GoalCategory[] = ["con
     name,
     handle: name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 16) || "athlete",
     email,
-    avatarColor: "linear-gradient(135deg,#6a4cff,#ff5c3d)",
+    avatarColor: "linear-gradient(135deg,#1379c9,#35c2f2)",
     avatarInitials: initials(name),
     focus,
     bio: "New to Ascend. Ready to rally.",

@@ -19,8 +19,8 @@ const TYPE_LABEL: Record<Post["type"], string> = {
   powerplay: "Power Play",
 };
 
-const TYPE_TONE: Record<Post["type"], "volt" | "violet" | "rival" | "gold" | "neutral"> = {
-  progress: "violet",
+const TYPE_TONE: Record<Post["type"], "volt" | "blue" | "rival" | "gold" | "neutral"> = {
+  progress: "blue",
   win: "gold",
   streak: "volt",
   encouragement: "neutral",
@@ -108,7 +108,7 @@ export function FeedPostCard({ post }: { post: Post }) {
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitComment()}
               placeholder="Add encouragement..."
-              className="flex-1 rounded-pill border border-white/8 bg-white/5 px-3.5 py-2 text-sm text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-violet"
+              className="flex-1 rounded-pill border border-white/8 bg-white/5 px-3.5 py-2 text-sm text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             />
             <button
               onClick={submitComment}

@@ -1,26 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  /* Ink — near-black base, never pure #000 so gradients breathe */
-  --ink-950: #07070a;
-  --ink-900: #0c0d12;
-  --ink-800: #14151d;
-  --ink-700: #1c1e29;
-  --ink-600: #262838;
-  --ink-500: #34364a;
-  --ink-400: #4b4e68;
+  /* Ink — near-black base with a cool blue undertone (sampled from brand mark), never pure #000 so gradients breathe */
+  --ink-950: #08090d;
+  --ink-900: #0e0f15;
+  --ink-800: #14161e;
+  --ink-700: #1c1f29;
+  --ink-600: #262a38;
+  --ink-500: #343949;
+  --ink-400: #4a5066;
 
   /* Chalk — foreground / text */
-  --chalk-100: #f7f7fb;
-  --chalk-300: #cdd0de;
-  --chalk-500: #9296ab;
-  --chalk-700: #64677c;
+  --chalk-100: #f6f8fb;
+  --chalk-300: #cbd1de;
+  --chalk-500: #8f96a8;
+  --chalk-700: #60697c;
 
-  /* Ascend — signature brand gradient pair (violet → coral) */
-  --ascend-violet: #6a4cff;
-  --ascend-indigo: #3d2ee0;
-  --ascend-coral: #ff5c3d;
-  --ascend-ember: #ff8a3d;
+  /* Ascend — signature brand gradient (navy → blue → sky), lifted from the logo mark */
+  --ascend-navy: #0b3f7a;
+  --ascend-blue: #1379c9;
+  --ascend-sky: #35c2f2;
 
   /* Volt — progress / streak / success accent */
   --volt-500: #c8ff3d;
@@ -28,8 +27,8 @@
   --volt-700: #8fce00;
 
   /* Rival — competition / duel accent */
-  --rival-500: #ff2d6b;
-  --rival-700: #c4114a;
+  --rival-500: #ff3b5c;
+  --rival-700: #c81f45;
 
   /* Signal */
   --gold-500: #ffc23d;
@@ -42,7 +41,7 @@
   --radius-pill: 999px;
 
   --shadow-lift: 0 1px 0 0 rgba(255, 255, 255, 0.06) inset, 0 20px 40px -16px rgba(0, 0, 0, 0.65);
-  --shadow-glow-violet: 0 0 0 1px rgba(106, 76, 255, 0.25), 0 12px 32px -8px rgba(106, 76, 255, 0.45);
+  --shadow-glow-blue: 0 0 0 1px rgba(19, 121, 201, 0.3), 0 12px 32px -8px rgba(53, 194, 242, 0.4);
   --shadow-glow-volt: 0 0 0 1px rgba(200, 255, 61, 0.25), 0 12px 28px -10px rgba(200, 255, 61, 0.35);
 }
 
@@ -63,10 +62,9 @@
   --color-chalk-500: var(--chalk-500);
   --color-chalk-700: var(--chalk-700);
 
-  --color-ascend-violet: var(--ascend-violet);
-  --color-ascend-indigo: var(--ascend-indigo);
-  --color-ascend-coral: var(--ascend-coral);
-  --color-ascend-ember: var(--ascend-ember);
+  --color-ascend-navy: var(--ascend-navy);
+  --color-ascend-blue: var(--ascend-blue);
+  --color-ascend-sky: var(--ascend-sky);
 
   --color-volt-400: var(--volt-400);
   --color-volt-500: var(--volt-500);
@@ -78,7 +76,7 @@
   --color-gold-500: var(--gold-500);
   --color-sky-500: var(--sky-500);
 
-  --font-display: var(--font-anton);
+  --font-display: var(--font-archivo-black);
   --font-sans: var(--font-manrope);
   --font-mono: var(--font-geist-mono);
 
@@ -95,7 +93,7 @@ html {
 }
 
 body {
-  background: radial-gradient(120% 90% at 50% -10%, #171226 0%, var(--ink-950) 46%, var(--ink-950) 100%);
+  background: radial-gradient(120% 90% at 50% -10%, #0d1e33 0%, var(--ink-950) 46%, var(--ink-950) 100%);
   color: var(--foreground);
   font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   min-height: 100dvh;
@@ -103,7 +101,7 @@ body {
 }
 
 ::selection {
-  background: var(--ascend-violet);
+  background: var(--ascend-blue);
   color: white;
 }
 
@@ -112,20 +110,20 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-anton), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-archivo-black), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: 0.01em;
   text-transform: uppercase;
 }
 
 .text-ascend-gradient {
-  background: linear-gradient(100deg, var(--ascend-violet) 0%, #9a5cff 32%, var(--ascend-coral) 75%, var(--ascend-ember) 100%);
+  background: linear-gradient(100deg, var(--ascend-navy) 0%, var(--ascend-blue) 55%, var(--ascend-sky) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .bg-ascend-gradient {
-  background: linear-gradient(115deg, var(--ascend-indigo) 0%, var(--ascend-violet) 45%, var(--ascend-coral) 100%);
+  background: linear-gradient(115deg, var(--ascend-navy) 0%, var(--ascend-blue) 55%, var(--ascend-sky) 100%);
 }
 
 .bg-volt-gradient {
