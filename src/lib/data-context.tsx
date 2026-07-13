@@ -28,6 +28,7 @@ import type {
   Message,
   Notification,
   Post,
+  PostType,
   PowerPlay,
 } from "./types";
 
@@ -97,6 +98,7 @@ interface DataContextValue {
     stake: number;
   }) => Goal | null;
   markNotificationsRead: () => void;
+  createPost: (params: { body: string; imageUrl?: string; goalId?: string }) => void;
   logProgress: (goalId: string) => void;
   spendStreakFreeze: (goalId: string) => void;
   settleStakes: (goalId: string) => void;
@@ -297,6 +299,69 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       notifications: prev.notifications.map((n) => ({ ...n, read: true })),
     }));
   }, []);
+
+  const createPost = useCallback(
+    (params: { body: string; imageUrl?: string; goalId?: string }) => {
+      const now = new Date();
+      setState((prev) => {
+        const goal = params.goalId ? prev.goals.find((g) => g.id === params.goalId) : undefined;
+        const me = goal?.participants.find((p) => p.userId === "me");
+
+        let type: PostType = "encouragement";
+        let headline = "Shared an update";
+        let statValue: string | undefined;
+        let statLabel: string | undefined;
+
+        if (goal && me) {
+          statValue = `${me.progress}%`;
+          statLabel = "progress";
+          if (me.progress >= 100) {
+            type = "win";
+            headline = `Hit the target on ${goal.title}`;
+          } else if (goal.streak > 0 && goal.streak % 7 === 0) {
+            type = "streak";
+            headline = `${goal.streak}-day streak on ${goal.title}`;
+          } else {
+            type = "progress";
+            headline = `Checkpoint: ${goal.title}`;
+          }
+        } else if (params.imageUrl) {
+          headline = "Shared a photo";
+        }
+
+        const post: Post = {
+          id: `p-${now.getTime()}`,
+          userId: "me",
+          goalId: params.goalId,
+          type,
+          headline,
+          body: params.body,
+          statValue,
+          statLabel,
+          imageUrl: params.imageUrl,
+          createdAt: now.toISOString(),
+          reactions: [],
+          comments: [],
+        };
+
+        return {
+          ...prev,
+          posts: [post, ...prev.posts],
+          activity: [
+            {
+              id: `h-${now.getTime()}`,
+              userId: "me",
+              label: params.imageUrl ? "Shared a photo update" : "Posted to the feed",
+              detail: goal ? goal.title : params.body.slice(0, 48),
+              createdAt: now.toISOString(),
+            },
+            ...prev.activity,
+          ],
+        };
+      });
+    },
+    []
+  );
 
   const logProgress = useCallback(
     (goalId: string) => {
@@ -513,6 +578,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       joinPowerPlay,
       createGoal,
       markNotificationsRead,
+      createPost,
       logProgress,
       spendStreakFreeze,
       settleStakes,
@@ -529,6 +595,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       joinPowerPlay,
       createGoal,
       markNotificationsRead,
+      createPost,
       logProgress,
       spendStreakFreeze,
       settleStakes,

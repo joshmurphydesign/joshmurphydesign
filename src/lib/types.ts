@@ -94,6 +94,7 @@ export interface Post {
   body: string;
   statValue?: string;
   statLabel?: string;
+  imageUrl?: string;
   createdAt: string;
   reactions: Reaction[];
   comments: Comment[];

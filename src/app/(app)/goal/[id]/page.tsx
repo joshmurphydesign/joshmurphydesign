@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useData } from "@/lib/data-context";
@@ -11,7 +12,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import { IconCheck } from "@/components/ui/Icons";
+import { IconCamera, IconCheck } from "@/components/ui/Icons";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { categoryEmoji, daysUntil, isToday, modeLabel } from "@/lib/utils";
 
@@ -141,6 +142,12 @@ export default function GoalDetailPage() {
                   {"\u{2744}\u{FE0F}"} Streak at risk — use a freeze ({user?.freezes ?? 0} left)
                 </button>
               )}
+              <Link
+                href={`/feed/new?goalId=${goal.id}`}
+                className="inline-flex items-center justify-center gap-2 rounded-pill border border-white/15 px-5 py-3 text-sm font-semibold text-chalk-100 transition-transform active:scale-[0.97]"
+              >
+                <IconCamera className="h-4 w-4" /> Share a photo update
+              </Link>
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-2">

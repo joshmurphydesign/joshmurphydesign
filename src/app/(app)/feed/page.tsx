@@ -7,7 +7,7 @@ import { NotificationsButton } from "@/components/shell/NotificationsButton";
 import { HeaderIconLink } from "@/components/shell/HeaderIconLink";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { PowerPlayCard } from "@/components/powerplay/PowerPlayCard";
-import { IconMessage, IconSearch } from "@/components/ui/Icons";
+import { IconCamera, IconMessage, IconSearch } from "@/components/ui/Icons";
 import { cn } from "@/lib/utils";
 import type { Post } from "@/lib/types";
 
@@ -38,6 +38,7 @@ export default function FeedPage() {
         title="Feed"
         right={
           <div className="flex items-center gap-2">
+            <HeaderIconLink href="/feed/new" icon={<IconCamera className="h-5 w-5" />} label="New post" />
             <HeaderIconLink href="/discover" icon={<IconSearch className="h-5 w-5" />} label="Discover" />
             <HeaderIconLink
               href="/messages"

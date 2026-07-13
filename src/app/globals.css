@@ -186,3 +186,27 @@ body {
 .animate-pulse-ring {
   animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+@keyframes heart-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+    filter: drop-shadow(0 0 24px rgba(255, 59, 92, 0.6));
+  }
+  35% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  65% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+}
+
+.animate-heart-pop {
+  animation: heart-pop 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

@@ -14,6 +14,11 @@ const daysAgo = (d: number) => hoursAgo(d * 24);
 const hoursFromNow = (h: number) => new Date(Date.now() + h * 3600 * 1000).toISOString();
 const daysFromNow = (d: number) => hoursFromNow(d * 24);
 
+function coverArt(from: string, to: string, emoji: string): string {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='1000'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${from}'/><stop offset='1' stop-color='${to}'/></linearGradient></defs><rect width='800' height='1000' fill='url(#g)'/><text x='400' y='560' font-size='280' text-anchor='middle' dominant-baseline='middle'>${emoji}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export const USERS: User[] = [
   {
     id: "u-maya",
@@ -334,6 +339,7 @@ export const POSTS: Post[] = [
     body: "Day 88 of push-ups done before the sun's even up. This one's a lifestyle now.",
     statValue: "88",
     statLabel: "day streak",
+    imageUrl: coverArt("#8fce00", "#c8ff3d", "\u{1F525}"),
     createdAt: hoursAgo(2),
     reactions: [
       { emoji: "\u{1F525}", userIds: ["u-dre", "u-maya", "me"] },
@@ -363,6 +369,7 @@ export const POSTS: Post[] = [
     type: "win",
     headline: "First 10K day of the challenge",
     body: "Late-night walk to close the ring. Don't judge the method, judge the result.",
+    imageUrl: coverArt("#0b3f7a", "#35c2f2", "\u{1F463}"),
     createdAt: hoursAgo(7),
     reactions: [{ emoji: "\u{1F44F}", userIds: ["u-jonah", "me"] }],
     comments: [
