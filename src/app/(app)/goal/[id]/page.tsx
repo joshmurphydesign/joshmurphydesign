@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { pointsForPlacement, useData } from "@/lib/data-context";
-import { isStepsGoal } from "@/lib/metric-presets";
+import { isStepsGoal, metricIsCumulative, metricNeedsBaseline, metricNeedsNumericLog } from "@/lib/metric-presets";
 import { useUserMap } from "@/lib/people";
 import { TopBar } from "@/components/shell/TopBar";
 import { Pill } from "@/components/ui/Pill";
@@ -38,6 +38,7 @@ export default function GoalDetailPage() {
   const [daysLeft] = useState(() => daysUntil(goal?.endDate ?? new Date().toISOString()));
   const [logValue, setLogValue] = useState("");
   const [joinStartValue, setJoinStartValue] = useState("");
+  const [manualLogOpen, setManualLogOpen] = useState(false);
 
   if (!goal) {
     return (
@@ -63,15 +64,20 @@ export default function GoalDetailPage() {
   const winnerPoints = pointsForPlacement(goal.mode, 1);
 
   const metric = goal.metric;
-  const needsNumericLog = metric.type !== "binary";
-  const needsBaseline = metric.type === "increase" || metric.type === "decrease";
+  const needsNumericLog = metricNeedsNumericLog(metric.type);
+  const needsBaseline = metricNeedsBaseline(metric.type);
   // Cumulative goals (steps, reps, distance...) are naturally multi-session, so
   // logging again today just adds another entry instead of being locked out.
-  const isCumulative = metric.type === "cumulative";
+  const isCumulative = metricIsCumulative(metric.type);
   const canLogMore = isCumulative || !loggedToday;
   const stepsGoal = isStepsGoal(goal);
   const healthProviderLabel = health?.provider === "apple" ? "Apple Health" : health?.provider === "samsung" ? "Samsung Health" : undefined;
   const healthProviderEmoji = health?.provider === "apple" ? "\u{1F34E}" : "\u{231A}";
+  // When Health is already auto-syncing this goal, a permanently-visible manual
+  // input competes with the sync banner for the same number — tuck it behind a
+  // toggle instead so the auto-sync path reads as primary.
+  const autoSynced = stepsGoal && !!health;
+  const showManualFields = !autoSynced || manualLogOpen;
 
   const submitLog = () => {
     if (!needsNumericLog) {
@@ -82,6 +88,7 @@ export default function GoalDetailPage() {
     if (logValue.trim() === "" || Number.isNaN(num)) return;
     logProgress(goal.id, num);
     setLogValue("");
+    if (autoSynced) setManualLogOpen(false);
   };
 
   const submitJoin = () => {
@@ -179,33 +186,45 @@ export default function GoalDetailPage() {
                     : `Currently ${formatValue(me.currentValue ?? me.startValue ?? 0)} ${goal.unit} · started at ${formatValue(me.startValue ?? 0)} ${goal.unit}`}
                 </p>
               )}
-              {needsNumericLog && canLogMore && (
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  value={logValue}
-                  onChange={(e) => setLogValue(e.target.value)}
-                  placeholder={isCumulative ? `Add ${goal.unit} logged today` : `Today's ${goal.unit}`}
-                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
-                />
+              {showManualFields ? (
+                <>
+                  {needsNumericLog && canLogMore && (
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={logValue}
+                      onChange={(e) => setLogValue(e.target.value)}
+                      placeholder={isCumulative ? `Add ${goal.unit} logged today` : `Today's ${goal.unit}`}
+                      className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                    />
+                  )}
+                  <Button
+                    onClick={submitLog}
+                    disabled={!canLogMore || (needsNumericLog && logValue.trim() === "")}
+                    variant={!canLogMore ? "ghost" : "volt"}
+                    size="md"
+                    className="w-full"
+                  >
+                    {!canLogMore ? (
+                      <>
+                        <IconCheck className="h-4 w-4" /> Logged today
+                      </>
+                    ) : isCumulative && loggedToday ? (
+                      "Add more today"
+                    ) : (
+                      "Log today's progress"
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setManualLogOpen(true)}
+                  className="self-start text-xs font-semibold text-sky-500"
+                >
+                  + Log extra steps manually
+                </button>
               )}
-              <Button
-                onClick={submitLog}
-                disabled={!canLogMore || (needsNumericLog && logValue.trim() === "")}
-                variant={!canLogMore ? "ghost" : "volt"}
-                size="md"
-                className="w-full"
-              >
-                {!canLogMore ? (
-                  <>
-                    <IconCheck className="h-4 w-4" /> Logged today
-                  </>
-                ) : isCumulative && loggedToday ? (
-                  "Add more today"
-                ) : (
-                  "Log today's progress"
-                )}
-              </Button>
               {streakAtRisk && (
                 <button
                   onClick={() => spendStreakFreeze(goal.id)}

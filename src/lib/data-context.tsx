@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import { useAuth } from "./auth-context";
-import { computeProgress, isStepsGoal } from "./metric-presets";
+import { computeProgress, isStepsGoal, metricIsCumulative, metricNeedsBaseline } from "./metric-presets";
 import {
   ACTIVITY_HISTORY,
   COMPETITIONS,
@@ -208,7 +208,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => {
       const goal = prev.goals.find((g) => g.id === goalId);
       if (!goal || goal.participants.some((p) => p.userId === "me")) return prev;
-      const needsBaseline = goal.metric.type === "increase" || goal.metric.type === "decrease";
+      const needsBaseline = metricNeedsBaseline(goal.metric.type);
       const participant: GoalParticipant = {
         userId: "me",
         progress: 0,
@@ -259,7 +259,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }): Goal => {
       const now = new Date();
       const end = new Date(now.getTime() + params.durationDays * 86400 * 1000);
-      const needsBaseline = params.metric.type === "increase" || params.metric.type === "decrease";
+      const needsBaseline = metricNeedsBaseline(params.metric.type);
       const goal: Goal = {
         id: `g-${Date.now()}`,
         title: params.title,
@@ -397,7 +397,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         // Cumulative goals (steps, reps, distance...) are naturally multi-session —
         // you might log a morning run and an evening run the same day. Every other
         // metric is a once-daily snapshot or habit check, so it keeps the daily cap.
-        const isCumulative = metric.type === "cumulative";
+        const isCumulative = metricIsCumulative(metric.type);
         const alreadyLoggedToday = !!me.lastLoggedAt && isSameDay(me.lastLoggedAt, now);
         if (alreadyLoggedToday && !isCumulative) return prev;
 
@@ -445,6 +445,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const providerLabel =
           prev.health?.provider === "apple" ? "Apple Health" : prev.health?.provider === "samsung" ? "Samsung Health" : undefined;
         const providerEmoji = prev.health?.provider === "apple" ? "\u{1F34E}" : "\u{231A}";
+        // Repeated health syncs update progress every time, but only the first sync of
+        // the day (or a moment worth celebrating) is worth a public feed post — otherwise
+        // tapping "Sync now" a few times floods the feed with near-identical entries.
+        const shouldPostToFeed = !isHealthSync || !alreadyLoggedToday || hitTarget || milestone;
 
         const post: Post = {
           id: `p-${now}`,
@@ -481,7 +485,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
               ? g
               : { ...g, participants: updatedParticipants, progress: aggregateProgress, streak: nextStreak }
           ),
-          posts: [post, ...prev.posts],
+          posts: shouldPostToFeed ? [post, ...prev.posts] : prev.posts,
           activity: [
             {
               id: `h-${now}`,

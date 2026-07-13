@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useData } from "@/lib/data-context";
 import { USERS } from "@/lib/mock-data";
-import { presetsForCategory, targetDisplayString } from "@/lib/metric-presets";
+import { metricNeedsBaseline, presetsForCategory, targetDisplayString } from "@/lib/metric-presets";
 import { TopBar } from "@/components/shell/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -91,7 +91,7 @@ export default function CreateGoalPage() {
   const selectedPreset = presets.find((p) => p.key === trackingKey);
   const activeMetricType: MetricType = isConsistency ? "binary" : isCustomNumeric ? customType : selectedPreset?.metricType ?? "binary";
   const activeUnit = isConsistency ? unit.trim() : isCustomNumeric ? customUnit.trim() : selectedPreset?.unit ?? "";
-  const needsBaseline = activeMetricType === "increase" || activeMetricType === "decrease";
+  const needsBaseline = metricNeedsBaseline(activeMetricType);
 
   const selectTracking = (key: string) => {
     setTrackingKey(key);

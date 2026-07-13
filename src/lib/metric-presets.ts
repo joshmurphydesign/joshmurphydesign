@@ -151,3 +151,15 @@ export function computeProgress(metric: GoalMetric, participant: Pick<GoalPartic
 export function isStepsGoal(goal: Pick<Goal, "metric" | "category" | "unit">): boolean {
   return goal.metric.type === "cumulative" && (goal.category === "steps" || /steps?/i.test(goal.unit));
 }
+
+// Metric-shape checks used across the create flow, goal detail, cards, and the data
+// layer — centralized here so every caller agrees on what each metric type means.
+export function metricNeedsNumericLog(type: MetricType): boolean {
+  return type !== "binary";
+}
+export function metricNeedsBaseline(type: MetricType): boolean {
+  return type === "increase" || type === "decrease";
+}
+export function metricIsCumulative(type: MetricType): boolean {
+  return type === "cumulative";
+}
