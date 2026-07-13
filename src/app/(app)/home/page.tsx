@@ -29,6 +29,7 @@ export default function HomePage() {
   const hasUnreadThreads = threads.some((t) => t.unread);
 
   const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === "me"));
+  const bestStreak = myGoals.reduce((max, g) => Math.max(max, g.streak), 0);
   const livePowerPlays = powerPlays.filter((p) => p.isLive);
   const upcomingPowerPlays = powerPlays.filter((p) => !p.isLive);
   const orderedPowerPlays = [...livePowerPlays, ...upcomingPowerPlays].slice(0, 3);
@@ -63,7 +64,7 @@ export default function HomePage() {
       <div className="grid grid-cols-3 gap-3 px-5">
         <StatTile icon={<IconFlame className="h-4 w-4" />} value={myGoals.length} label="Active goals" tone="blue" />
         <StatTile icon={<IconTrophy className="h-4 w-4" />} value={`#${bestRank?.rank ?? "-"}`} label="Best rank" tone="gold" />
-        <StatTile icon={<span className="text-sm">{"\u{1F525}"}</span>} value={user.streak} label="Day streak" tone="volt" />
+        <StatTile icon={<span className="text-sm">{"\u{1F525}"}</span>} value={bestStreak} label="Day streak" tone="volt" />
       </div>
 
       {riskNotifications.length > 0 && (

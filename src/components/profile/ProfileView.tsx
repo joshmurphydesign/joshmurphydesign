@@ -20,6 +20,10 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
 
   const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === person.id));
   const completedGoals = myGoals.filter((g) => g.status === "completed" || g.progress >= 100);
+  // Goal.streak only tracks "me"'s own logging pattern, so a live best-streak
+  // can only be derived for the signed-in user — other profiles fall back to
+  // their static seed value.
+  const bestActiveStreak = isMe ? myGoals.reduce((max, g) => Math.max(max, g.streak), 0) : person.streak;
 
   const topFinishes = useMemo(() => {
     const all = [
@@ -33,7 +37,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
   }, [competitions, powerPlays, person.id]);
 
   const achievements = [
-    person.streak >= 30 && { icon: "\u{1F525}", label: `${person.streak}-day streak` },
+    bestActiveStreak >= 30 && { icon: "\u{1F525}", label: `${bestActiveStreak}-day streak` },
     completedGoals.length > 0 && { icon: "\u{1F3C1}", label: `${completedGoals.length} goal${completedGoals.length === 1 ? "" : "s"} completed` },
     ...topFinishes.slice(0, 3).map((f) => ({ icon: f.entry.rank === 1 ? "\u{1F947}" : f.entry.rank === 2 ? "\u{1F948}" : "\u{1F949}", label: f.label })),
   ].filter(Boolean) as { icon: string; label: string }[];
@@ -90,7 +94,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
 
       <div className="grid grid-cols-4 gap-2.5 px-5">
         <StatBlock value={person.score.toLocaleString()} label="Score" />
-        <StatBlock value={person.streak} label="Streak" />
+        <StatBlock value={bestActiveStreak} label="Streak" />
         <StatBlock value={person.followers} label="Followers" />
         <StatBlock value={isMe ? following.length : person.following} label="Following" />
       </div>
