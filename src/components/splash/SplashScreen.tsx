@@ -42,7 +42,7 @@ export function SplashScreen() {
         transition={{ delay: 0.55, duration: 0.5 }}
         className="relative mt-2 text-xs font-semibold uppercase tracking-[0.3em] text-chalk-500"
       >
-        Iron sharpens iron
+        Show Up. Stand Out.
       </motion.p>
 
       <motion.div

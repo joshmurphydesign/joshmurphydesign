@@ -91,7 +91,7 @@ export const USERS: User[] = [
     avatarColor: "linear-gradient(135deg,#0b3f7a,#35c2f2)",
     avatarInitials: "TB",
     focus: ["running", "strength"],
-    bio: "Marathon #4 loading. Hybrid athlete. Iron sharpens iron.",
+    bio: "Marathon #4 loading. Hybrid athlete. Show up, stand out.",
     score: 5590,
     streak: 55,
     followers: 1877,
@@ -305,7 +305,7 @@ export const POSTS: Post[] = [
     userId: "u-tasha",
     type: "encouragement",
     headline: "Shoutout to this whole rally",
-    body: "Y'all have made 5am so much easier to get out of bed for. Iron sharpens iron, truly.",
+    body: "Y'all have made 5am so much easier to get out of bed for. Show up, stand out — truly.",
     createdAt: hoursAgo(14),
     reactions: [
       { emoji: "\u{2764}\u{FE0F}", userIds: ["u-maya", "u-dre", "u-priya", "me", "u-jonah"] },

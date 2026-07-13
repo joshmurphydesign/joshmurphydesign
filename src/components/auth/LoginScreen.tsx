@@ -74,7 +74,7 @@ export function LoginScreen() {
         </div>
         <div>
           <p className="font-display text-lg leading-none tracking-wide">ASCEND</p>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-chalk-500">Iron sharpens iron</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-chalk-500">Show Up. Stand Out.</p>
         </div>
       </motion.div>
 

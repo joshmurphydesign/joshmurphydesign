@@ -1,6 +1,6 @@
 # Ascend
 
-**Iron sharpens iron.**
+**Show Up. Stand Out.**
 
 Ascend is a premium social-accountability platform for athletes — set goals, rally your people, compete with purpose, and track progress through streaks, challenges, duels, and live open events called Power Plays.
 
