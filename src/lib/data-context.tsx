@@ -391,6 +391,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const logProgress = useCallback(
     (goalId: string, value?: number, source: "manual" | "health" = "manual") => {
       const now = Date.now();
+      // Captured inside the updater and applied after setState returns — calling
+      // adjustFreezes (a different context's setState) from inside this updater
+      // would violate React's "updater must be pure" rule and can fire while
+      // DataProvider is still mid-render.
+      let awardFreeze = false;
       setState((prev) => {
         const goal = prev.goals.find((g) => g.id === goalId);
         if (!goal) return prev;
@@ -448,7 +453,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         // Streak-freeze milestones only make sense for day-streaks — entry-based
         // goals have no daily obligation to protect.
         const milestone = !isEntryBased && !alreadyLoggedToday && nextStreak > 0 && nextStreak % 7 === 0;
-        if (milestone) adjustFreezes(1);
+        if (milestone) awardFreeze = true;
 
         const hitTarget = nextProgress >= 100 && me.progress < 100;
         const valueLabel =
@@ -531,6 +536,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           ],
         };
       });
+      if (awardFreeze) adjustFreezes(1);
     },
     [adjustFreezes]
   );

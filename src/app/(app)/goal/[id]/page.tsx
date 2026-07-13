@@ -14,6 +14,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StreakBadge } from "@/components/ui/StreakBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { IconCamera, IconCheck, IconChevronRight } from "@/components/ui/Icons";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { categoryEmoji, daysUntil, isToday, modeLabel, timeAgo } from "@/lib/utils";
@@ -39,7 +40,7 @@ export default function GoalDetailPage() {
   const [daysLeft] = useState(() => daysUntil(goal?.endDate ?? new Date().toISOString()));
   const [logValue, setLogValue] = useState("");
   const [joinStartValue, setJoinStartValue] = useState("");
-  const [manualLogOpen, setManualLogOpen] = useState(false);
+  const [logModalOpen, setLogModalOpen] = useState(false);
 
   if (!goal) {
     return (
@@ -82,22 +83,27 @@ export default function GoalDetailPage() {
   const stepsGoal = isStepsGoal(goal);
   const healthProviderLabel = health?.provider === "apple" ? "Apple Health" : health?.provider === "samsung" ? "Samsung Health" : undefined;
   const healthProviderEmoji = health?.provider === "apple" ? "\u{1F34E}" : "\u{231A}";
-  // When Health is already auto-syncing this goal, a permanently-visible manual
-  // input competes with the sync banner for the same number — tuck it behind a
-  // toggle instead so the auto-sync path reads as primary.
+  // When Health is already auto-syncing this goal, a big primary log button
+  // competes with the sync banner for the same number — a quiet text link reads
+  // as the secondary path instead.
   const autoSynced = stepsGoal && !!health;
-  const showManualFields = !autoSynced || manualLogOpen;
 
-  const submitLog = () => {
+  const openLog = () => {
+    if (!canLogMore) return;
     if (!needsNumericLog) {
       logProgress(goal.id);
       return;
     }
+    setLogValue("");
+    setLogModalOpen(true);
+  };
+
+  const submitLog = () => {
     const num = Number(logValue);
     if (logValue.trim() === "" || Number.isNaN(num)) return;
     logProgress(goal.id, num);
     setLogValue("");
-    if (autoSynced) setManualLogOpen(false);
+    setLogModalOpen(false);
   };
 
   const submitJoin = () => {
@@ -289,46 +295,30 @@ export default function GoalDetailPage() {
                       : `Currently ${formatValue(me.currentValue ?? me.startValue ?? 0)} ${goal.unit} · started at ${formatValue(me.startValue ?? 0)} ${goal.unit}`}
                 </p>
               )}
-              {showManualFields ? (
-                <>
-                  {needsNumericLog && canLogMore && (
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      value={logValue}
-                      onChange={(e) => setLogValue(e.target.value)}
-                      placeholder={isCumulative ? `Add ${goal.unit} logged today` : isEntryBased ? `New ${goal.unit} attempt` : `Today's ${goal.unit}`}
-                      className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
-                    />
-                  )}
-                  <Button
-                    onClick={submitLog}
-                    disabled={!canLogMore || (needsNumericLog && logValue.trim() === "")}
-                    variant={!canLogMore ? "ghost" : "volt"}
-                    size="md"
-                    className="w-full"
-                  >
-                    {!canLogMore ? (
-                      <>
-                        <IconCheck className="h-4 w-4" /> Logged today
-                      </>
-                    ) : isEntryBased ? (
-                      "Log an entry"
-                    ) : isCumulative && loggedToday ? (
-                      "Add more today"
-                    ) : (
-                      "Log today's progress"
-                    )}
-                  </Button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setManualLogOpen(true)}
-                  className="self-start text-xs font-semibold text-sky-500"
-                >
+              {autoSynced ? (
+                <button type="button" onClick={openLog} className="self-start text-xs font-semibold text-sky-500">
                   + Log extra steps manually
                 </button>
+              ) : (
+                <Button
+                  onClick={openLog}
+                  disabled={!canLogMore}
+                  variant={!canLogMore ? "ghost" : "volt"}
+                  size="md"
+                  className="w-full"
+                >
+                  {!canLogMore ? (
+                    <>
+                      <IconCheck className="h-4 w-4" /> Logged today
+                    </>
+                  ) : isEntryBased ? (
+                    "Log an entry"
+                  ) : isCumulative && loggedToday ? (
+                    "Add more today"
+                  ) : (
+                    "Log today's progress"
+                  )}
+                </Button>
               )}
               {streakAtRisk && (
                 <button
@@ -414,6 +404,36 @@ export default function GoalDetailPage() {
           )}
         </div>
       </div>
+
+      {logModalOpen && needsNumericLog && (
+        <BottomSheet onClose={() => setLogModalOpen(false)}>
+          <p className="text-center font-display text-lg text-chalk-100">Log an entry</p>
+          <p className="mt-1 text-center text-sm text-chalk-500">{goal.title}</p>
+          <label className="mt-5 flex flex-col gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">
+              {isCumulative ? `${goal.unit} logged` : isEntryBased ? `New ${goal.unit} attempt` : `Today's ${goal.unit}`}
+            </span>
+            <input
+              autoFocus
+              type="number"
+              inputMode="decimal"
+              value={logValue}
+              onChange={(e) => setLogValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitLog()}
+              placeholder="0"
+              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+            />
+          </label>
+          <div className="mt-5 flex flex-col gap-2.5">
+            <Button onClick={submitLog} disabled={logValue.trim() === ""} variant="volt" size="md" className="w-full">
+              Log entry
+            </Button>
+            <Button onClick={() => setLogModalOpen(false)} variant="ghost" size="md" className="w-full">
+              Cancel
+            </Button>
+          </div>
+        </BottomSheet>
+      )}
     </div>
   );
 }
