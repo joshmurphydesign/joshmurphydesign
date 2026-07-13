@@ -15,6 +15,21 @@ export type GoalMode = "goal" | "challenge" | "duel" | "quest";
 
 export type GoalStatus = "active" | "completed" | "failed" | "upcoming";
 
+/**
+ * How a goal's progress is actually tracked:
+ * - "increase": a number climbing from a personal baseline toward a target (e.g. 1-rep max, +20 lb).
+ * - "decrease": a number falling from a personal baseline toward a target (e.g. body weight, -10 lb).
+ * - "cumulative": a running total logged toward a target sum (e.g. total steps, total reps).
+ * - "binary": a plain daily check-in with no numeric value — the original tap-to-log streak mechanic.
+ */
+export type MetricType = "increase" | "decrease" | "cumulative" | "binary";
+
+export interface GoalMetric {
+  type: MetricType;
+  /** Magnitude of the target: the delta to gain/lose for increase/decrease, the total for cumulative, unused for binary. */
+  targetValue: number;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -34,10 +49,14 @@ export interface User {
 
 export interface GoalParticipant {
   userId: string;
-  progress: number; // 0-100
+  progress: number; // 0-100, derived from the goal's metric
   joinedAt: string;
   isOwner: boolean;
   lastLoggedAt?: string;
+  /** Baseline value at join time. Only meaningful for increase/decrease metrics. */
+  startValue?: number;
+  /** Latest logged value (increase/decrease) or running total (cumulative). */
+  currentValue?: number;
 }
 
 export interface Goal {
@@ -56,6 +75,8 @@ export interface Goal {
   participants: GoalParticipant[];
   streak: number;
   coverGradient: string;
+  /** How progress is tracked for this goal. Every goal has one — "binary" is the plain tap-to-log default. */
+  metric: GoalMetric;
   /** What's on the line — flavor text, e.g. "☕ Loser buys coffee". No points cost to join. */
   stake?: string;
   settledAt?: string;

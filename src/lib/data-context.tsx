@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { useAuth } from "./auth-context";
+import { computeProgress } from "./metric-presets";
 import {
   ACTIVITY_HISTORY,
   COMPETITIONS,
@@ -24,7 +25,9 @@ import type {
   Competition,
   Goal,
   GoalCategory,
+  GoalMetric,
   GoalMode,
+  GoalParticipant,
   Message,
   Notification,
   Post,
@@ -84,7 +87,7 @@ interface DataContextValue {
   following: string[];
   toggleReaction: (postId: string, emoji: string) => void;
   addComment: (postId: string, text: string) => void;
-  joinGoal: (goalId: string) => void;
+  joinGoal: (goalId: string, startValue?: number) => void;
   joinPowerPlay: (powerPlayId: string) => void;
   createGoal: (params: {
     title: string;
@@ -96,10 +99,12 @@ interface DataContextValue {
     durationDays: number;
     inviteeIds: string[];
     stake?: string;
+    metric: GoalMetric;
+    startingValue?: number;
   }) => Goal;
   markNotificationsRead: () => void;
   createPost: (params: { body: string; imageUrl?: string; goalId?: string }) => void;
-  logProgress: (goalId: string) => void;
+  logProgress: (goalId: string, value?: number) => void;
   spendStreakFreeze: (goalId: string) => void;
   settleGoal: (goalId: string) => void;
   toggleFollow: (userId: string) => void;
@@ -191,22 +196,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const joinGoal = useCallback((goalId: string) => {
+  const joinGoal = useCallback((goalId: string, startValue?: number) => {
     setState((prev) => {
       const goal = prev.goals.find((g) => g.id === goalId);
       if (!goal || goal.participants.some((p) => p.userId === "me")) return prev;
+      const needsBaseline = goal.metric.type === "increase" || goal.metric.type === "decrease";
+      const participant: GoalParticipant = {
+        userId: "me",
+        progress: 0,
+        joinedAt: new Date().toISOString(),
+        isOwner: false,
+        ...(needsBaseline ? { startValue: startValue ?? 0, currentValue: startValue ?? 0 } : {}),
+      };
       return {
         ...prev,
         goals: prev.goals.map((g) =>
-          g.id !== goalId
-            ? g
-            : {
-                ...g,
-                participants: [
-                  ...g.participants,
-                  { userId: "me", progress: 0, joinedAt: new Date().toISOString(), isOwner: false },
-                ],
-              }
+          g.id !== goalId ? g : { ...g, participants: [...g.participants, participant] }
         ),
       };
     });
@@ -241,9 +246,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       durationDays: number;
       inviteeIds: string[];
       stake?: string;
+      metric: GoalMetric;
+      startingValue?: number;
     }): Goal => {
       const now = new Date();
       const end = new Date(now.getTime() + params.durationDays * 86400 * 1000);
+      const needsBaseline = params.metric.type === "increase" || params.metric.type === "decrease";
       const goal: Goal = {
         id: `g-${Date.now()}`,
         title: params.title,
@@ -260,8 +268,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         streak: 0,
         coverGradient: GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)],
         stake: params.stake || undefined,
+        metric: params.metric,
         participants: [
-          { userId: "me", progress: 0, joinedAt: now.toISOString(), isOwner: true },
+          {
+            userId: "me",
+            progress: 0,
+            joinedAt: now.toISOString(),
+            isOwner: true,
+            ...(needsBaseline ? { startValue: params.startingValue ?? 0, currentValue: params.startingValue ?? 0 } : {}),
+          },
           ...params.inviteeIds.map((id) => ({
             userId: id,
             progress: 0,
@@ -362,7 +377,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logProgress = useCallback(
-    (goalId: string) => {
+    (goalId: string, value?: number) => {
       const now = Date.now();
       setState((prev) => {
         const goal = prev.goals.find((g) => g.id === goalId);
@@ -370,14 +385,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const me = goal.participants.find((p) => p.userId === "me");
         if (!me || (me.lastLoggedAt && isSameDay(me.lastLoggedAt, now))) return prev;
 
-        const step = Math.max(1, Math.round(100 / goal.durationDays));
-        const nextProgress = Math.min(100, me.progress + step);
+        const metric = goal.metric;
+        let nextCurrentValue = me.currentValue;
+        let nextProgress: number;
+        if (metric.type === "binary") {
+          const step = Math.max(1, Math.round(100 / goal.durationDays));
+          nextProgress = Math.min(100, me.progress + step);
+        } else if (metric.type === "cumulative") {
+          nextCurrentValue = (me.currentValue ?? 0) + (value ?? 0);
+          nextProgress = computeProgress(metric, { progress: me.progress, startValue: me.startValue, currentValue: nextCurrentValue });
+        } else {
+          nextCurrentValue = value ?? me.currentValue ?? me.startValue ?? 0;
+          nextProgress = computeProgress(metric, { progress: me.progress, startValue: me.startValue, currentValue: nextCurrentValue });
+        }
+
         const continuing = !!me.lastLoggedAt && isYesterday(me.lastLoggedAt, now);
         const nextStreak = continuing ? goal.streak + 1 : 1;
 
         const nowIso = new Date(now).toISOString();
         const updatedParticipants = goal.participants.map((p) =>
-          p.userId === "me" ? { ...p, progress: nextProgress, lastLoggedAt: nowIso } : p
+          p.userId === "me" ? { ...p, progress: nextProgress, currentValue: nextCurrentValue, lastLoggedAt: nowIso } : p
         );
         const aggregateProgress = Math.round(
           updatedParticipants.reduce((sum, p) => sum + p.progress, 0) / updatedParticipants.length
@@ -387,6 +414,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         if (milestone) adjustFreezes(1);
 
         const hitTarget = nextProgress >= 100 && me.progress < 100;
+        const valueLabel =
+          metric.type === "binary"
+            ? undefined
+            : metric.type === "cumulative"
+              ? `${nextCurrentValue} ${goal.unit} logged`
+              : `${nextCurrentValue} ${goal.unit}`;
         const post: Post = {
           id: `p-${now}`,
           userId: "me",
@@ -401,7 +434,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             ? "Target complete. Show up, stand out — mission accomplished."
             : milestone
               ? `${nextStreak} days in a row. Earned a streak freeze for staying consistent.`
-              : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`,
+              : valueLabel
+                ? `Day ${nextStreak} logged — ${valueLabel}. ${nextProgress}% of the way there.`
+                : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`,
           statValue: `${nextProgress}%`,
           statLabel: "progress",
           createdAt: nowIso,

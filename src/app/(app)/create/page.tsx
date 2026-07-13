@@ -4,12 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useData } from "@/lib/data-context";
 import { USERS } from "@/lib/mock-data";
+import { presetsForCategory, targetDisplayString } from "@/lib/metric-presets";
 import { TopBar } from "@/components/shell/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
 import { cn, categoryEmoji, categoryLabel, modeLabel } from "@/lib/utils";
-import type { GoalCategory, GoalMode } from "@/lib/types";
+import type { GoalCategory, GoalMode, MetricType } from "@/lib/types";
+
+const METRIC_TYPE_ICON: Record<MetricType, string> = {
+  increase: "\u{1F4C8}",
+  decrease: "\u{1F4C9}",
+  cumulative: "\u{1F522}",
+  binary: "\u{2705}",
+};
 
 const CATEGORIES: GoalCategory[] = [
   "strength",
@@ -62,6 +70,12 @@ export default function CreateGoalPage() {
   const [stakePreset, setStakePreset] = useState<string | null>(null);
   const [customStake, setCustomStake] = useState("");
 
+  const [trackingKey, setTrackingKey] = useState("consistency");
+  const [customType, setCustomType] = useState<MetricType>("cumulative");
+  const [customUnit, setCustomUnit] = useState("");
+  const [targetAmount, setTargetAmount] = useState("");
+  const [startingValue, setStartingValue] = useState("");
+
   const toggleInvitee = (id: string) => {
     setInviteeIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
@@ -71,25 +85,54 @@ export default function CreateGoalPage() {
       ? customStake.trim()
       : STAKE_PRESETS.find((p) => p.key === stakePreset)?.label ?? "";
 
+  const presets = presetsForCategory(category);
+  const isConsistency = trackingKey === "consistency";
+  const isCustomNumeric = trackingKey === "custom";
+  const selectedPreset = presets.find((p) => p.key === trackingKey);
+  const activeMetricType: MetricType = isConsistency ? "binary" : isCustomNumeric ? customType : selectedPreset?.metricType ?? "binary";
+  const activeUnit = isConsistency ? unit.trim() : isCustomNumeric ? customUnit.trim() : selectedPreset?.unit ?? "";
+  const needsBaseline = activeMetricType === "increase" || activeMetricType === "decrease";
+
+  const selectTracking = (key: string) => {
+    setTrackingKey(key);
+    const preset = presets.find((p) => p.key === key);
+    setTargetAmount(preset?.suggestedTarget ? String(preset.suggestedTarget) : "");
+    setStartingValue("");
+  };
+
   const canAdvance = [
     !!category,
-    title.trim().length > 1 && target.trim().length > 0 && unit.trim().length > 0,
+    (() => {
+      if (title.trim().length < 2) return false;
+      if (isConsistency) return target.trim().length > 0 && unit.trim().length > 0;
+      const amt = Number(targetAmount);
+      if (!targetAmount || !(amt > 0)) return false;
+      if (isCustomNumeric && !customUnit.trim()) return false;
+      if (needsBaseline && startingValue.trim() === "") return false;
+      return true;
+    })(),
     true,
     true,
   ][step];
 
   const publish = () => {
     if (!category) return;
+    const metric = isConsistency
+      ? { type: "binary" as const, targetValue: durationDays }
+      : { type: activeMetricType, targetValue: Math.max(0, Number(targetAmount) || 0) };
+    const finalTarget = isConsistency ? target.trim() : targetDisplayString(metric);
     const goal = createGoal({
       title: title.trim(),
       category,
       mode,
       description: description.trim() || "New goal on Ascend.",
-      target: target.trim(),
-      unit: unit.trim(),
+      target: finalTarget,
+      unit: isConsistency ? unit.trim() : activeUnit,
       durationDays,
       inviteeIds,
       stake: STAKE_MODES.includes(mode) ? finalStake || undefined : undefined,
+      metric,
+      startingValue: needsBaseline ? Number(startingValue) || 0 : undefined,
     });
     router.replace(`/goal/${goal.id}`);
   };
@@ -190,24 +233,114 @@ export default function CreateGoalPage() {
               className="resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Target">
-              <input
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                placeholder="100"
-                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">
+              How should progress be tracked?
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <TrackingChip
+                active={isConsistency}
+                onClick={() => selectTracking("consistency")}
+                icon={METRIC_TYPE_ICON.binary}
+                label="Consistency"
               />
-            </Field>
-            <Field label="Unit">
-              <input
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                placeholder="push-ups / day"
-                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+              {presets
+                .filter((p) => p.key !== "consistency")
+                .map((p) => (
+                  <TrackingChip
+                    key={p.key}
+                    active={trackingKey === p.key}
+                    onClick={() => selectTracking(p.key)}
+                    icon={METRIC_TYPE_ICON[p.metricType]}
+                    label={p.label}
+                  />
+                ))}
+              <TrackingChip
+                active={isCustomNumeric}
+                onClick={() => selectTracking("custom")}
+                icon="✏️"
+                label="Custom number"
               />
-            </Field>
+            </div>
           </div>
+
+          {isConsistency ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Target">
+                <input
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  placeholder="100"
+                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                />
+              </Field>
+              <Field label="Unit">
+                <input
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  placeholder="push-ups / day"
+                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                />
+              </Field>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {isCustomNumeric && (
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Direction">
+                    <select
+                      value={customType}
+                      onChange={(e) => setCustomType(e.target.value as MetricType)}
+                      className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none focus:border-ascend-blue"
+                    >
+                      <option value="cumulative">Add up to a total</option>
+                      <option value="increase">Climb to a higher number</option>
+                      <option value="decrease">Work down to a lower number</option>
+                    </select>
+                  </Field>
+                  <Field label="Unit">
+                    <input
+                      value={customUnit}
+                      onChange={(e) => setCustomUnit(e.target.value)}
+                      placeholder="lb, miles, reps..."
+                      className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                    />
+                  </Field>
+                </div>
+              )}
+              <Field
+                label={
+                  isCustomNumeric
+                    ? "Target amount"
+                    : `Target ${selectedPreset?.metricType === "cumulative" ? "total" : "change"}${activeUnit ? ` (${activeUnit})` : ""}`
+                }
+              >
+                <input
+                  type="number"
+                  min={1}
+                  value={targetAmount}
+                  onChange={(e) => setTargetAmount(e.target.value)}
+                  placeholder={selectedPreset?.suggestedTarget ? String(selectedPreset.suggestedTarget) : "0"}
+                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                />
+              </Field>
+              {needsBaseline && (
+                <Field label={selectedPreset?.startingPrompt ?? "Your starting value"}>
+                  <input
+                    type="number"
+                    value={startingValue}
+                    onChange={(e) => setStartingValue(e.target.value)}
+                    placeholder="0"
+                    className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                  />
+                </Field>
+              )}
+              <p className="text-xs text-chalk-500">
+                Everyone who joins logs their own numbers — progress bars reflect personal starting points,
+                not a shared count.
+              </p>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">Duration</span>
@@ -349,8 +482,18 @@ export default function CreateGoalPage() {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <SummaryRow label="Mode" value={modeLabel(mode)} />
             <SummaryRow label="Duration" value={`${durationDays} days`} />
-            <SummaryRow label="Target" value={`${target || "—"} ${unit}`} />
+            <SummaryRow
+              label="Target"
+              value={
+                isConsistency
+                  ? `${target || "—"} ${unit}`
+                  : `${targetDisplayString({ type: activeMetricType, targetValue: Math.max(0, Number(targetAmount) || 0) })} ${activeUnit}`
+              }
+            />
             <SummaryRow label="Rally" value={`${inviteeIds.length} invited`} />
+            {needsBaseline && (
+              <SummaryRow label="Your starting point" value={`${startingValue || "0"} ${activeUnit}`} />
+            )}
             {STAKE_MODES.includes(mode) && finalStake && (
               <div className="card-surface col-span-2 rounded-2xl p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">
@@ -380,6 +523,32 @@ export default function CreateGoalPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function TrackingChip({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: string;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-1.5 rounded-pill border px-3.5 py-2 text-xs font-semibold transition-colors",
+        active ? "border-volt-500/40 bg-volt-500/10 text-volt-400" : "border-white/8 bg-white/5 text-chalk-300"
+      )}
+    >
+      <span>{icon}</span>
+      {label}
+    </button>
   );
 }
 

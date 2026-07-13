@@ -150,6 +150,7 @@ export const GOALS: Goal[] = [
     progress: 62,
     streak: 12,
     coverGradient: "linear-gradient(135deg,#0b3f7a,#35c2f2)",
+    metric: { type: "binary", targetValue: 30 },
     participants: [
       { userId: "me", progress: 62, joinedAt: daysAgo(12), isOwner: true, lastLoggedAt: hoursAgo(14) },
       { userId: "u-dre", progress: 88, joinedAt: daysAgo(12), isOwner: false },
@@ -172,6 +173,7 @@ export const GOALS: Goal[] = [
     progress: 38,
     streak: 6,
     coverGradient: "linear-gradient(135deg,#1379c9,#3dd6ff)",
+    metric: { type: "binary", targetValue: 84 },
     participants: [
       { userId: "me", progress: 38, joinedAt: daysAgo(30), isOwner: true, lastLoggedAt: daysAgo(1) },
       { userId: "u-maya", progress: 71, joinedAt: daysAgo(30), isOwner: false },
@@ -190,12 +192,13 @@ export const GOALS: Goal[] = [
     startDate: daysAgo(20),
     endDate: daysFromNow(40),
     status: "active",
-    progress: 45,
+    progress: 42,
     streak: 3,
     coverGradient: "linear-gradient(135deg,#0f5132,#c8ff3d)",
+    metric: { type: "decrease", targetValue: 6 },
     participants: [
-      { userId: "u-sam", progress: 58, joinedAt: daysAgo(20), isOwner: true },
-      { userId: "me", progress: 45, joinedAt: daysAgo(18), isOwner: false, lastLoggedAt: daysAgo(3) },
+      { userId: "u-sam", progress: 50, joinedAt: daysAgo(20), isOwner: true, startValue: 85, currentValue: 82 },
+      { userId: "me", progress: 33, joinedAt: daysAgo(18), isOwner: false, lastLoggedAt: daysAgo(3), startValue: 85, currentValue: 83 },
     ],
   },
   {
@@ -214,11 +217,12 @@ export const GOALS: Goal[] = [
     streak: 9,
     coverGradient: "linear-gradient(135deg,#ffc23d,#ff3b5c)",
     stake: "🥤 Loser buys smoothies for the group",
+    metric: { type: "cumulative", targetValue: 300000 },
     participants: [
-      { userId: "u-jonah", progress: 100, joinedAt: daysAgo(9), isOwner: true },
-      { userId: "me", progress: 80, joinedAt: daysAgo(9), isOwner: false, lastLoggedAt: hoursAgo(20) },
-      { userId: "u-devon", progress: 66, joinedAt: daysAgo(9), isOwner: false },
-      { userId: "u-tasha", progress: 90, joinedAt: daysAgo(8), isOwner: false },
+      { userId: "u-jonah", progress: 100, joinedAt: daysAgo(9), isOwner: true, currentValue: 300000 },
+      { userId: "me", progress: 80, joinedAt: daysAgo(9), isOwner: false, lastLoggedAt: hoursAgo(20), currentValue: 240000 },
+      { userId: "u-devon", progress: 66, joinedAt: daysAgo(9), isOwner: false, currentValue: 198000 },
+      { userId: "u-tasha", progress: 90, joinedAt: daysAgo(8), isOwner: false, currentValue: 270000 },
     ],
   },
   {
@@ -236,6 +240,7 @@ export const GOALS: Goal[] = [
     progress: 55,
     streak: 5,
     coverGradient: "linear-gradient(135deg,#3dd6ff,#c8ff3d)",
+    metric: { type: "binary", targetValue: 21 },
     participants: [
       { userId: "u-sam", progress: 70, joinedAt: daysAgo(5), isOwner: true },
       { userId: "me", progress: 55, joinedAt: daysAgo(5), isOwner: false, lastLoggedAt: daysAgo(2) },
@@ -253,14 +258,15 @@ export const GOALS: Goal[] = [
     startDate: daysAgo(14),
     endDate: daysFromNow(28),
     status: "active",
-    progress: 33,
+    progress: 48,
     streak: 4,
     coverGradient: "linear-gradient(135deg,#ff3b5c,#0b3f7a)",
     stake: "☕ Loser buys coffee",
     isPublic: true,
+    metric: { type: "increase", targetValue: 20 },
     participants: [
-      { userId: "u-priya", progress: 61, joinedAt: daysAgo(14), isOwner: true },
-      { userId: "u-dre", progress: 33, joinedAt: daysAgo(14), isOwner: false },
+      { userId: "u-priya", progress: 60, joinedAt: daysAgo(14), isOwner: true, startValue: 185, currentValue: 197 },
+      { userId: "u-dre", progress: 35, joinedAt: daysAgo(14), isOwner: false, startValue: 225, currentValue: 232 },
     ],
   },
   {
@@ -280,7 +286,8 @@ export const GOALS: Goal[] = [
     coverGradient: "linear-gradient(135deg,#ff8a3d,#ff3b5c)",
     stake: "🍕 Loser buys pizza",
     isPublic: true,
-    participants: [{ userId: "u-devon", progress: 20, joinedAt: daysAgo(2), isOwner: true }],
+    metric: { type: "increase", targetValue: 50 },
+    participants: [{ userId: "u-devon", progress: 20, joinedAt: daysAgo(2), isOwner: true, startValue: 0, currentValue: 10 }],
   },
   {
     id: "g-clean15-nutrition",
@@ -299,6 +306,7 @@ export const GOALS: Goal[] = [
     coverGradient: "linear-gradient(135deg,#c8ff3d,#0f5132)",
     stake: "👑 Winner picks the next challenge",
     isPublic: true,
+    metric: { type: "binary", targetValue: 15 },
     participants: [
       { userId: "u-tasha", progress: 27, joinedAt: daysAgo(4), isOwner: true },
       { userId: "u-maya", progress: 33, joinedAt: daysAgo(4), isOwner: false },
@@ -321,7 +329,8 @@ export const GOALS: Goal[] = [
     streak: 6,
     coverGradient: "linear-gradient(135deg,#3dd6ff,#0b3f7a)",
     isPublic: true,
-    participants: [{ userId: "u-jonah", progress: 11, joinedAt: daysAgo(6), isOwner: true }],
+    metric: { type: "cumulative", targetValue: 56 },
+    participants: [{ userId: "u-jonah", progress: 11, joinedAt: daysAgo(6), isOwner: true, currentValue: 6 }],
   },
 ];
 

@@ -16,6 +16,10 @@ import { IconCamera, IconCheck } from "@/components/ui/Icons";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { categoryEmoji, daysUntil, isToday, modeLabel } from "@/lib/utils";
 
+function formatValue(n: number): string {
+  return n.toLocaleString();
+}
+
 const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
   goal: "blue",
   challenge: "gold",
@@ -31,6 +35,8 @@ export default function GoalDetailPage() {
 
   const goal = goals.find((g) => g.id === params.id);
   const [daysLeft] = useState(() => daysUntil(goal?.endDate ?? new Date().toISOString()));
+  const [logValue, setLogValue] = useState("");
+  const [joinStartValue, setJoinStartValue] = useState("");
 
   if (!goal) {
     return (
@@ -54,6 +60,31 @@ export default function GoalDetailPage() {
   const winner = goal.winnerId ? userMap[goal.winnerId] : undefined;
   const isCompetitive = goal.mode === "challenge" || goal.mode === "duel";
   const winnerPoints = pointsForPlacement(goal.mode, 1);
+
+  const metric = goal.metric;
+  const needsNumericLog = metric.type !== "binary";
+  const needsBaseline = metric.type === "increase" || metric.type === "decrease";
+
+  const submitLog = () => {
+    if (!needsNumericLog) {
+      logProgress(goal.id);
+      return;
+    }
+    const num = Number(logValue);
+    if (logValue.trim() === "" || Number.isNaN(num)) return;
+    logProgress(goal.id, num);
+    setLogValue("");
+  };
+
+  const submitJoin = () => {
+    if (!needsBaseline) {
+      joinGoal(goal.id);
+      return;
+    }
+    const num = Number(joinStartValue);
+    if (joinStartValue.trim() === "" || Number.isNaN(num)) return;
+    joinGoal(goal.id, num);
+  };
 
   return (
     <div className="flex flex-col gap-6 pb-4">
@@ -111,9 +142,30 @@ export default function GoalDetailPage() {
 
           {iAmIn ? (
             <div className="mt-4 flex flex-col gap-2">
+              {me && needsNumericLog && (
+                <p className="text-xs text-chalk-500">
+                  {metric.type === "cumulative"
+                    ? `${formatValue(me.currentValue ?? 0)} / ${formatValue(metric.targetValue)} ${goal.unit} logged`
+                    : `Currently ${formatValue(me.currentValue ?? me.startValue ?? 0)} ${goal.unit} · started at ${formatValue(me.startValue ?? 0)} ${goal.unit}`}
+                </p>
+              )}
+              {needsNumericLog && !loggedToday && (
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={logValue}
+                  onChange={(e) => setLogValue(e.target.value)}
+                  placeholder={
+                    metric.type === "cumulative"
+                      ? `Add ${goal.unit} logged today`
+                      : `Today's ${goal.unit}`
+                  }
+                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                />
+              )}
               <Button
-                onClick={() => logProgress(goal.id)}
-                disabled={loggedToday}
+                onClick={submitLog}
+                disabled={loggedToday || (needsNumericLog && logValue.trim() === "")}
                 variant={loggedToday ? "ghost" : "volt"}
                 size="md"
                 className="w-full"
@@ -144,7 +196,23 @@ export default function GoalDetailPage() {
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
-              <Button onClick={() => joinGoal(goal.id)} variant="volt" size="md" className="w-full">
+              {needsBaseline && (
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={joinStartValue}
+                  onChange={(e) => setJoinStartValue(e.target.value)}
+                  placeholder={`Your starting ${goal.unit}`}
+                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                />
+              )}
+              <Button
+                onClick={submitJoin}
+                disabled={needsBaseline && joinStartValue.trim() === ""}
+                variant="volt"
+                size="md"
+                className="w-full"
+              >
                 Join this {modeLabel(goal.mode).toLowerCase()}
               </Button>
             </div>
@@ -170,6 +238,11 @@ export default function GoalDetailPage() {
                     </p>
                     <span className="text-xs font-bold text-chalk-300">{p.progress}%</span>
                   </div>
+                  {needsNumericLog && p.currentValue !== undefined && (
+                    <p className="mt-0.5 text-[11px] text-chalk-500">
+                      {formatValue(p.currentValue)} {goal.unit}
+                    </p>
+                  )}
                   <ProgressBar value={p.progress} height={5} className="mt-1.5" />
                 </div>
               </div>

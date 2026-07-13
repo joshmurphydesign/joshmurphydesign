@@ -42,7 +42,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
         </div>
         <div className="flex items-center gap-2">
           <StreakBadge days={goal.streak} />
-          {me && (
+          {me && goal.metric.type === "binary" && (
             <button
               onClick={(e) => {
                 e.preventDefault();
