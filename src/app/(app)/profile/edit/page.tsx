@@ -7,6 +7,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn, categoryEmoji, categoryLabel } from "@/lib/utils";
+import { initials } from "@/lib/profile";
 import type { GoalCategory } from "@/lib/types";
 
 const CATEGORIES: GoalCategory[] = [
@@ -51,7 +52,7 @@ export default function EditProfilePage() {
   const canSave = name.trim().length > 1;
 
   const save = () => {
-    updateProfile({ name: name.trim(), bio: bio.trim(), focus, avatarColor });
+    void updateProfile({ name: name.trim(), bio: bio.trim(), focus, avatarColor });
     router.replace("/profile");
   };
 
@@ -129,10 +130,4 @@ export default function EditProfilePage() {
       </div>
     </div>
   );
-}
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }

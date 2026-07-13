@@ -23,13 +23,13 @@ export default function PaymentMethodsPage() {
   const save = (provider: PaymentProvider) => {
     const clean = normalizeHandle(draft);
     if (!clean) return;
-    updatePaymentHandles([...handles.filter((h) => h.provider !== provider), { provider, handle: clean }]);
+    void updatePaymentHandles([...handles.filter((h) => h.provider !== provider), { provider, handle: clean }]);
     setEditing(null);
     setDraft("");
   };
 
   const remove = (provider: PaymentProvider) => {
-    updatePaymentHandles(handles.filter((h) => h.provider !== provider));
+    void updatePaymentHandles(handles.filter((h) => h.provider !== provider));
     if (editing === provider) setEditing(null);
   };
 

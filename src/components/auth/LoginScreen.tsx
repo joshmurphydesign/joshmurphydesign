@@ -29,6 +29,7 @@ export function LoginScreen() {
   const [password, setPassword] = useState("");
   const [focus, setFocus] = useState<GoalCategory[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleFocus = (cat: GoalCategory) => {
     setFocus((prev) =>
@@ -41,16 +42,27 @@ export function LoginScreen() {
     password.trim().length >= 4 &&
     (mode === "login" || name.trim().length > 1);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || submitting) return;
     setSubmitting(true);
-    if (mode === "signup") {
-      signup({ name: name.trim(), email: email.trim(), focus: focus.length ? focus : ["consistency"] });
-    } else {
-      login(email.trim(), name.trim() || undefined);
+    setError(null);
+    try {
+      if (mode === "signup") {
+        await signup({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          focus: focus.length ? focus : ["consistency"],
+        });
+      } else {
+        await login(email.trim(), password);
+      }
+      router.replace("/home");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setSubmitting(false);
     }
-    router.replace("/home");
   };
 
   return (
@@ -192,8 +204,13 @@ export function LoginScreen() {
         )}
 
         <div className="mt-auto flex flex-col gap-3 pt-4">
-          <Button type="submit" variant="primary" size="lg" disabled={!canSubmit} className="w-full">
-            {mode === "signup" ? "Start ascending" : "Log in"}
+          {error && (
+            <p className="rounded-2xl border border-[#ff3b5c]/30 bg-[#ff3b5c]/10 px-4 py-3 text-center text-xs font-semibold text-[#ff8fa0]">
+              {error}
+            </p>
+          )}
+          <Button type="submit" variant="primary" size="lg" disabled={!canSubmit || submitting} className="w-full">
+            {submitting ? "One sec…" : mode === "signup" ? "Start ascending" : "Log in"}
           </Button>
           <p className="text-center text-[11px] text-chalk-700">
             Your session stays signed in on this device until you log out.

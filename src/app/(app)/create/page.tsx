@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useData } from "@/lib/data-context";
-import { USERS } from "@/lib/mock-data";
 import { metricNeedsBaseline, presetsForCategory, targetDisplayString } from "@/lib/metric-presets";
 import { TopBar } from "@/components/shell/TopBar";
 import { Button } from "@/components/ui/Button";
@@ -55,7 +54,7 @@ const STAKE_PRESETS = [
 
 export default function CreateGoalPage() {
   const router = useRouter();
-  const { createGoal } = useData();
+  const { createGoal, otherUsers } = useData();
   const [step, setStep] = useState(0);
 
   const [category, setCategory] = useState<GoalCategory | null>(null);
@@ -116,13 +115,13 @@ export default function CreateGoalPage() {
     true,
   ][step];
 
-  const publish = () => {
+  const publish = async () => {
     if (!category) return;
     const metric = isConsistency
       ? { type: "binary" as const, targetValue: durationDays }
       : { type: activeMetricType, targetValue: Math.max(0, Number(targetAmount) || 0) };
     const finalTarget = isConsistency ? target.trim() : targetDisplayString(metric);
-    const goal = createGoal({
+    const goal = await createGoal({
       title: title.trim(),
       category,
       mode,
@@ -461,7 +460,7 @@ export default function CreateGoalPage() {
             Invite people to rally with you
           </p>
           <div className="flex flex-col gap-2">
-            {USERS.map((u) => {
+            {otherUsers.map((u) => {
               const selected = inviteeIds.includes(u.id);
               return (
                 <button

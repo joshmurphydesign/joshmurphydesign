@@ -3,17 +3,19 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useData } from "@/lib/data-context";
 import { BottomNav } from "@/components/shell/BottomNav";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, isHydrated } = useAuth();
+  const { isHydrated: dataHydrated } = useData();
   const router = useRouter();
 
   useEffect(() => {
     if (isHydrated && !user) router.replace("/login");
   }, [isHydrated, user, router]);
 
-  if (!isHydrated || !user) {
+  if (!isHydrated || !user || !dataHydrated) {
     return <div className="min-h-dvh bg-ink-950" />;
   }
 

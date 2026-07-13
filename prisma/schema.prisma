@@ -1,0 +1,208 @@
+// Ascend backend schema.
+//
+// Datasource is SQLite for zero-setup local/sandbox development. Field types
+// below are deliberately kept Postgres-compatible (no SQLite-only types) so
+// switching `provider = "sqlite"` to `"postgresql"` and pointing DATABASE_URL
+// at a real database is the only change needed to deploy for real.
+//
+// Scope note: PowerPlay/Competition and Health-connection data intentionally
+// have no models here — they stay client-side mock/local state for this pass.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  handle         String   @unique
+  email          String   @unique
+  passwordHash   String
+  avatarColor    String
+  avatarInitials String
+  focus          String // JSON-encoded GoalCategory[]
+  bio            String   @default("")
+  score          Int      @default(0)
+  streak         Int      @default(0)
+  followers      Int      @default(0)
+  following      Int      @default(0)
+  location       String?
+  points         Int      @default(0)
+  freezes        Int      @default(0)
+  paymentHandles String   @default("[]") // JSON-encoded PaymentHandle[]
+  createdAt      DateTime @default(now())
+
+  sessions            Session[]
+  goalParticipants    GoalParticipant[]
+  posts               Post[]
+  reactions           ReactionEntry[]
+  comments            Comment[]
+  notifications       Notification[]      @relation("NotificationOwner")
+  activity            ActivityHistoryItem[]
+  sentMessages        Message[]           @relation("MessageSender")
+  receivedMessages    Message[]           @relation("MessageRecipient")
+  threadReads         ThreadRead[]
+  followedBy          Follow[]            @relation("Following")
+  follows             Follow[]            @relation("Follower")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model Goal {
+  id           String    @id @default(cuid())
+  title        String
+  category     String
+  mode         String
+  description  String
+  target       String
+  unit         String
+  durationDays Int
+  startDate    DateTime
+  endDate      DateTime
+  status       String
+  progress     Int       @default(0)
+  streak       Int       @default(0)
+  coverGradient String
+  metricType   String
+  metricTargetValue Float
+  stake        String?
+  stakeAmount  Float?
+  paidByUserIds String   @default("[]") // JSON-encoded userId[]
+  settledAt    DateTime?
+  winnerId     String?
+  isPublic     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  participants GoalParticipant[]
+  posts        Post[]
+}
+
+model GoalParticipant {
+  id           String    @id @default(cuid())
+  goalId       String
+  userId       String
+  progress     Int       @default(0)
+  joinedAt     DateTime  @default(now())
+  isOwner      Boolean   @default(false)
+  lastLoggedAt DateTime?
+  startValue   Float?
+  currentValue Float?
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([goalId, userId])
+}
+
+model Post {
+  id         String   @id @default(cuid())
+  userId     String
+  goalId     String?
+  powerPlayId String?
+  type       String
+  headline   String
+  body       String
+  statValue  String?
+  statLabel  String?
+  imageUrl   String?
+  createdAt  DateTime @default(now())
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal      Goal?           @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  reactions ReactionEntry[]
+  comments  Comment[]
+}
+
+model ReactionEntry {
+  id     String @id @default(cuid())
+  postId String
+  emoji  String
+  userId String
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, emoji, userId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  actorId   String?
+  message   String
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+
+  user User @relation("NotificationOwner", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityHistoryItem {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String
+  detail    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  threadId    String
+  senderId    String
+  recipientId String
+  text        String
+  createdAt   DateTime @default(now())
+
+  sender    User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+}
+
+model ThreadRead {
+  id          String   @id @default(cuid())
+  userId      String
+  otherUserId String
+  readAt      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, otherUserId])
+}

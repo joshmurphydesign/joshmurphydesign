@@ -1,7 +1,6 @@
 "use client";
 
 import { useData } from "@/lib/data-context";
-import { USERS } from "@/lib/mock-data";
 import { TopBar } from "@/components/shell/TopBar";
 import { GoalCard } from "@/components/goal/GoalCard";
 import { PowerPlayCard } from "@/components/powerplay/PowerPlayCard";
@@ -10,7 +9,7 @@ import { cn, categoryEmoji, categoryLabel, isFuture } from "@/lib/utils";
 import Link from "next/link";
 
 export default function DiscoverPage() {
-  const { goals, powerPlays, following, toggleFollow } = useData();
+  const { goals, powerPlays, following, toggleFollow, otherUsers } = useData();
 
   const discoverableGoals = goals.filter(
     (g) => g.isPublic && !g.participants.some((p) => p.userId === "me")
@@ -50,7 +49,7 @@ export default function DiscoverPage() {
       <section className="flex flex-col gap-3">
         <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Athletes to follow</h2>
         <div className="flex flex-col gap-2 px-5">
-          {USERS.map((u) => {
+          {otherUsers.map((u) => {
             const isFollowing = following.includes(u.id);
             return (
               <div key={u.id} className="card-surface flex items-center gap-3 rounded-2xl p-3">
