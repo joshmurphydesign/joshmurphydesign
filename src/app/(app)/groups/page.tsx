@@ -4,9 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useData } from "@/lib/data-context";
 import { TopBar } from "@/components/shell/TopBar";
-import { HeaderIconLink } from "@/components/shell/HeaderIconLink";
 import { GroupRoster } from "@/components/goal/GroupRoster";
-import { IconPlus } from "@/components/ui/Icons";
 import { categoryEmoji } from "@/lib/utils";
 import { metricIsEntryBased } from "@/lib/metric-presets";
 
@@ -24,10 +22,7 @@ export default function GroupsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <TopBar
-        title="Groups"
-        right={<HeaderIconLink href="/create" icon={<IconPlus className="h-5 w-5" />} label="Start a group" />}
-      />
+      <TopBar title="Groups" />
 
       <div className="px-5">
         <p className="text-xs text-chalk-500">Your accountability groups, streak circles, and challenge rooms.</p>

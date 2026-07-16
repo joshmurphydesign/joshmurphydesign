@@ -10,7 +10,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { GoalCard } from "@/components/goal/GoalCard";
 import { GroupRoster } from "@/components/goal/GroupRoster";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { IconCheck, IconMessage, IconPlus } from "@/components/ui/Icons";
+import { IconCheck, IconMessage } from "@/components/ui/Icons";
 import { checkInStatus } from "@/lib/streak-status";
 import { metricIsEntryBased } from "@/lib/metric-presets";
 import { byImportance } from "@/lib/feed-ranking";
@@ -71,7 +71,6 @@ export default function HomePage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <HeaderIconLink href="/create" icon={<IconPlus className="h-5 w-5" />} label="New commitment" />
           <HeaderIconLink
             href="/messages"
             icon={<IconMessage className="h-5 w-5" />}
