@@ -5,7 +5,7 @@ export function StreakBadge({ days, className }: { days: number; className?: str
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-pill bg-white/8 px-2.5 py-1 text-xs font-bold text-volt-400",
+        "font-stat inline-flex items-center gap-1 rounded-pill bg-white/8 px-2.5 py-1 text-xs font-bold text-volt-400",
         className
       )}
     >

@@ -100,7 +100,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
 
       {achievements.length > 0 && (
         <section className="flex flex-col gap-2.5">
-          <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Milestones</h2>
+          <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Milestones</h2>
           <div className="flex gap-2.5 overflow-x-auto px-5 pb-1">
             {achievements.map((a) => (
               <div
@@ -118,7 +118,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
       )}
 
       <section className="flex flex-col gap-2.5">
-        <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">
+        <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">
           Active goals <span className="text-chalk-500">({myGoals.length})</span>
         </h2>
         <div className="flex flex-col gap-3 px-5">
@@ -132,7 +132,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
 
       {rallyCircle.length > 0 && (
         <section className="flex flex-col gap-2.5">
-          <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Rally circle</h2>
+          <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Rally circle</h2>
           <div className="flex gap-3 overflow-x-auto px-5 pb-1">
             {rallyCircle.map((u) => (
               <div key={u.id} className="flex shrink-0 flex-col items-center gap-1.5" style={{ width: 68 }}>
@@ -146,7 +146,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
 
       {personActivity.length > 0 && (
         <section className="flex flex-col gap-2.5">
-          <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">History</h2>
+          <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">History</h2>
           <div className="flex flex-col gap-2 px-5">
             {personActivity.map((h) => (
               <div key={h.id} className="card-surface flex items-center justify-between rounded-2xl p-3.5">
@@ -167,7 +167,7 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
 function StatBlock({ value, label }: { value: string | number; label: string }) {
   return (
     <div className="card-surface flex flex-col items-center gap-0.5 rounded-2xl py-3.5">
-      <p className="font-display text-base leading-none text-chalk-100">{value}</p>
+      <p className="font-stat text-base leading-none text-chalk-100">{value}</p>
       <p className="text-[9px] font-semibold uppercase tracking-wide text-chalk-500">{label}</p>
     </div>
   );

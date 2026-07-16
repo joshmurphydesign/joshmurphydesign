@@ -19,7 +19,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex w-full max-w-md justify-center px-4 pb-4 safe-bottom">
-      <div className="flex w-full items-center justify-between rounded-[1.75rem] border border-white/8 bg-ink-900/85 px-2 py-2 backdrop-blur-xl shadow-[var(--shadow-lift)]">
+      <div className="flex w-full items-center justify-between rounded-[1.75rem] border border-chalk-300/8 bg-ink-900/85 px-2 py-2 backdrop-blur-xl shadow-[var(--shadow-lift)]">
         {ITEMS.map(({ href, label, icon: Icon, isCenter }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
 

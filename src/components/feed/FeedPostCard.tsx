@@ -132,7 +132,7 @@ export function FeedPostCard({ post }: { post: Post }) {
 
         {!post.imageUrl && post.statValue && (
           <div className="mt-3 inline-flex items-baseline gap-1.5 rounded-2xl bg-white/5 px-3 py-2">
-            <span className="font-display text-xl text-ascend-gradient">{post.statValue}</span>
+            <span className="font-stat text-xl text-ascend-gradient">{post.statValue}</span>
             <span className="text-xs text-chalk-500">{post.statLabel}</span>
           </div>
         )}
@@ -169,7 +169,7 @@ export function FeedPostCard({ post }: { post: Post }) {
           </Link>
         )}
 
-        <div className="mt-4 flex items-center justify-between border-t border-white/6 pt-3.5">
+        <div className="mt-4 flex items-center justify-between border-t border-chalk-300/6 pt-3.5">
           <ReactionBar reactions={post.reactions} onToggle={(emoji) => toggleReaction(post.id, emoji)} />
           <button
             onClick={() => setShowComments((v) => !v)}
@@ -180,7 +180,7 @@ export function FeedPostCard({ post }: { post: Post }) {
         </div>
 
         {showComments && (
-          <div className="mt-3.5 flex flex-col gap-3 border-t border-white/6 pt-3.5">
+          <div className="mt-3.5 flex flex-col gap-3 border-t border-chalk-300/6 pt-3.5">
             {post.comments.map((c) => (
               <CommentRow key={c.id} userId={c.userId} text={c.text} createdAt={c.createdAt} />
             ))}
@@ -190,7 +190,7 @@ export function FeedPostCard({ post }: { post: Post }) {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitComment()}
                 placeholder="Add encouragement..."
-                className="flex-1 rounded-pill border border-white/8 bg-white/5 px-3.5 py-2 text-sm text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                className="flex-1 rounded-pill border border-chalk-300/8 bg-white/5 px-3.5 py-2 text-sm text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
               />
               <button
                 onClick={submitComment}

@@ -11,12 +11,12 @@ import { initials } from "@/lib/profile";
 import type { GoalCategory } from "@/lib/types";
 
 const AVATAR_GRADIENTS = [
-  "linear-gradient(135deg,#1379c9,#35c2f2)",
-  "linear-gradient(135deg,#0b3f7a,#35c2f2)",
-  "linear-gradient(135deg,#ff3b5c,#ffc23d)",
-  "linear-gradient(135deg,#c8ff3d,#35c2f2)",
-  "linear-gradient(135deg,#ffc23d,#ff3b5c)",
-  "linear-gradient(135deg,#ff8a3d,#ffc23d)",
+  "linear-gradient(135deg,#1e3a66,#2e7bff)",
+  "linear-gradient(135deg,#1e3a66,#2e7bff)",
+  "linear-gradient(135deg,#05070d,#2e7bff)",
+  "linear-gradient(135deg,#2e7bff,#63a8ff)",
+  "linear-gradient(135deg,#1e3a66,#ff5a6a)",
+  "linear-gradient(135deg,#2e7bff,#63a8ff)",
 ];
 
 export default function EditProfilePage() {
@@ -56,7 +56,7 @@ export default function EditProfilePage() {
               aria-label="Choose avatar color"
               className={cn(
                 "h-8 w-8 rounded-full transition-transform",
-                avatarColor === g ? "scale-110 ring-2 ring-offset-2 ring-offset-ink-950 ring-white" : ""
+                avatarColor === g ? "scale-110 ring-2 ring-offset-2 ring-offset-ink-950 ring-ascend-blue" : ""
               )}
               style={{ background: g }}
             />
@@ -70,7 +70,7 @@ export default function EditProfilePage() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none focus:border-ascend-blue"
+            className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none focus:border-ascend-blue"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -79,7 +79,7 @@ export default function EditProfilePage() {
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={3}
-            className="resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none focus:border-ascend-blue"
+            className="resize-none rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none focus:border-ascend-blue"
           />
         </label>
         <div className="flex flex-col gap-2">
@@ -97,7 +97,7 @@ export default function EditProfilePage() {
                     "flex items-center gap-1.5 rounded-pill border px-3 py-2 text-xs font-semibold transition-colors",
                     active
                       ? "border-volt-500/40 bg-volt-500/15 text-volt-400"
-                      : "border-white/8 bg-white/5 text-chalk-500"
+                      : "border-chalk-300/8 bg-white/5 text-chalk-500"
                   )}
                 >
                   <span>{categoryEmoji(c)}</span>

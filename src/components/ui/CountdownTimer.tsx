@@ -21,12 +21,12 @@ export function CountdownTimer({
   }, [endsAt]);
 
   if (time.done) {
-    return <span className={cn("font-display text-sm text-chalk-500", className)}>ENDED</span>;
+    return <span className={cn("font-stat text-sm text-chalk-500", className)}>ENDED</span>;
   }
 
   if (compact) {
     return (
-      <span className={cn("font-display text-sm tabular-nums", className)}>
+      <span className={cn("font-stat text-sm tabular-nums", className)}>
         {time.d > 0 && `${time.d}D `}
         {pad2(time.h)}:{pad2(time.m)}:{pad2(time.s)}
       </span>
@@ -44,7 +44,7 @@ export function CountdownTimer({
     <div className={cn("flex items-center gap-2", className)}>
       {units.map(([val, label]) => (
         <div key={label} className="flex flex-col items-center rounded-xl bg-black/30 px-2.5 py-1.5 min-w-[46px]">
-          <span className="font-display text-lg leading-none tabular-nums">{pad2(val)}</span>
+          <span className="font-stat text-lg leading-none tabular-nums">{pad2(val)}</span>
           <span className="text-[10px] font-semibold text-chalk-500">{label}</span>
         </div>
       ))}

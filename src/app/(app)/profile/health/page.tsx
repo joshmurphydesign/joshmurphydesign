@@ -64,7 +64,7 @@ export default function HealthConnectPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">
                   Today&apos;s steps
                 </p>
-                <p className="mt-0.5 font-display text-2xl text-chalk-100">
+                <p className="mt-0.5 font-stat text-2xl text-chalk-100">
                   {health.todaySteps.toLocaleString()}
                 </p>
               </div>
@@ -150,7 +150,7 @@ function PermissionSheet({
   const meta = PROVIDER_META[provider];
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-t-[28px] border-t border-white/10 bg-ink-900 p-6 pb-8">
+      <div className="w-full max-w-md rounded-t-[28px] border-t border-chalk-300/10 bg-ink-900 p-6 pb-8">
         <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/15" />
         <div className="flex flex-col items-center gap-2 text-center">
           <span className="text-3xl">{meta.emoji}</span>

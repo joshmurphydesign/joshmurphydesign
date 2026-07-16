@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { GoalParticipant } from "@/lib/types";
 
 const STATUS_STYLE = {
-  "checked-in": { badge: "bg-volt-500 text-ink-950", label: "Checked in" },
+  "checked-in": { badge: "bg-success-500 text-ink-950", label: "Checked in" },
   missed: { badge: "bg-rival-500 text-white", label: "Missed — chain broken" },
   pending: { badge: "bg-white/15 text-chalk-300", label: "Hasn't checked in yet" },
   "not-started": { badge: "bg-white/10 text-chalk-700", label: "Hasn't started" },

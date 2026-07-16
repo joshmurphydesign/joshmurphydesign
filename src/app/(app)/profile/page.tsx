@@ -35,12 +35,12 @@ export default function MyProfilePage() {
       <div className="px-5">
         <div className="card-surface flex items-center justify-around rounded-2xl p-4">
           <div className="text-center">
-            <p className="font-display text-xl text-gold-500">{"\u{1FA99}"} {user.points ?? 0}</p>
+            <p className="font-stat text-xl text-gold-500">{"\u{1FA99}"} {user.points ?? 0}</p>
             <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-chalk-500">Points</p>
           </div>
           <div className="h-8 w-px bg-white/8" />
           <div className="text-center">
-            <p className="font-display text-xl text-sky-500">{"\u{2744}\u{FE0F}"} {user.freezes ?? 0}</p>
+            <p className="font-stat text-xl text-sky-500">{"\u{2744}\u{FE0F}"} {user.freezes ?? 0}</p>
             <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-chalk-500">Streak freezes</p>
           </div>
         </div>

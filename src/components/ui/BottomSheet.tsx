@@ -13,7 +13,7 @@ export function BottomSheet({
       onClick={onClose}
     >
       <div
-        className="safe-bottom w-full max-w-md rounded-t-[28px] border-t border-white/10 bg-ink-900 p-6 pb-8"
+        className="safe-bottom w-full max-w-md rounded-t-[28px] border-t border-chalk-300/10 bg-ink-900 p-6 pb-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/15" />

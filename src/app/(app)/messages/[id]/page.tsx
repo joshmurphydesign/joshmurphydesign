@@ -75,7 +75,7 @@ export default function ThreadPage() {
         )}
       </div>
 
-      <div className="sticky bottom-24 mx-5 mt-2 flex items-center gap-2 rounded-pill border border-white/8 bg-ink-900/95 p-1.5 backdrop-blur-xl">
+      <div className="sticky bottom-24 mx-5 mt-2 flex items-center gap-2 rounded-pill border border-chalk-300/8 bg-ink-900/95 p-1.5 backdrop-blur-xl">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

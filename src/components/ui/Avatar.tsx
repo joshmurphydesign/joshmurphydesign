@@ -16,7 +16,7 @@ export function Avatar({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full font-display text-chalk-100",
+        "flex shrink-0 items-center justify-center rounded-full font-ui text-chalk-100",
         ring && "ring-2 ring-ink-950",
         className
       )}

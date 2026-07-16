@@ -74,7 +74,7 @@ export default function PaymentMethodsPage() {
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder={meta.placeholder}
-                    className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                    className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
                   />
                   <div className="flex gap-2">
                     <Button
@@ -99,14 +99,13 @@ export default function PaymentMethodsPage() {
                     href={paymentLink(provider, handle)}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 rounded-pill border border-white/15 px-4 py-2.5 text-center text-xs font-semibold text-chalk-100"
+                    className="flex-1 rounded-pill border border-chalk-300/15 px-4 py-2.5 text-center text-xs font-semibold text-chalk-100"
                   >
                     Preview
                   </a>
                   <button
                     onClick={() => remove(provider)}
-                    className="flex-1 rounded-pill px-4 py-2.5 text-center text-xs font-semibold text-[#ff8fa0]"
-                    style={{ background: "rgba(255,59,92,0.15)", border: "1px solid rgba(255,59,92,0.3)" }}
+                    className="flex-1 rounded-pill border border-rival-500/30 bg-rival-500/15 px-4 py-2.5 text-center text-xs font-semibold text-[#ff8fa0]"
                   >
                     Remove
                   </button>

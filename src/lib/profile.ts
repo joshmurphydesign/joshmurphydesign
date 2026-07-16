@@ -8,4 +8,4 @@ export function slugifyHandle(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 16) || "athlete";
 }
 
-export const DEFAULT_AVATAR_COLOR = "linear-gradient(135deg,#1379c9,#35c2f2)";
+export const DEFAULT_AVATAR_COLOR = "linear-gradient(135deg,#1e3a66,#2e7bff)";

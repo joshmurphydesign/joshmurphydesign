@@ -12,7 +12,7 @@ export function ProfileInsights({ goals, posts }: { goals: Goal[]; posts: Post[]
 
   return (
     <section className="flex flex-col gap-2.5">
-      <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Insights</h2>
+      <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Insights</h2>
       <div className="grid grid-cols-2 gap-2.5 px-5">
         <InsightStat value={`${insights.completionRate}%`} label="Completion rate" />
         <InsightStat value={String(insights.longestStreak)} label="Longest streak" sub="days" />
@@ -32,8 +32,8 @@ export function ProfileInsights({ goals, posts }: { goals: Goal[]; posts: Post[]
                   aria-label={`${day.date}: ${day.checkedIn ? "checked in" : "no check-in"}`}
                   className={cn(
                     "h-6 flex-1 rounded-md",
-                    day.checkedIn ? "bg-volt-500" : "bg-white/8",
-                    isToday && "ring-2 ring-offset-2 ring-offset-ink-900 ring-white/25"
+                    day.checkedIn ? "bg-success-500" : "bg-white/8",
+                    isToday && "ring-2 ring-offset-2 ring-offset-ink-900 ring-chalk-300/30"
                   )}
                 />
               );
@@ -48,7 +48,7 @@ export function ProfileInsights({ goals, posts }: { goals: Goal[]; posts: Post[]
 function InsightStat({ value, label, sub }: { value: string; label: string; sub?: string }) {
   return (
     <div className="card-surface flex flex-col items-center gap-0.5 rounded-2xl py-4 text-center">
-      <p className="font-display text-xl leading-none text-chalk-100">
+      <p className="font-stat text-xl leading-none text-chalk-100">
         {value}
         {sub && <span className="ml-1 text-xs font-semibold text-chalk-500">{sub}</span>}
       </p>

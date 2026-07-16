@@ -24,7 +24,7 @@ export function ReactionBar({
             onClick={() => onToggle(r.emoji)}
             className={cn(
               "flex items-center gap-1 rounded-pill px-2.5 py-1 text-xs font-semibold transition-colors",
-              mine ? "bg-volt-500/15 text-volt-400 border border-volt-500/30" : "bg-white/6 text-chalk-300 border border-white/6"
+              mine ? "bg-volt-500/15 text-volt-400 border border-volt-500/30" : "bg-white/6 text-chalk-300 border border-chalk-300/6"
             )}
           >
             <span>{r.emoji}</span>
@@ -35,7 +35,7 @@ export function ReactionBar({
       {!iReactedAny && (
         <button
           onClick={() => onToggle(QUICK_EMOJI)}
-          className="flex items-center gap-1 rounded-pill border border-dashed border-white/15 px-2.5 py-1 text-xs font-semibold text-chalk-500"
+          className="flex items-center gap-1 rounded-pill border border-dashed border-chalk-300/15 px-2.5 py-1 text-xs font-semibold text-chalk-500"
         >
           <span>{QUICK_EMOJI}</span>
           React

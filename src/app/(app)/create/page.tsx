@@ -132,7 +132,7 @@ export default function CreateGoalPage() {
                   onClick={() => setMode(s.mode)}
                   className={cn(
                     "flex items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition-colors",
-                    mode === s.mode ? "border-ascend-blue/40 bg-ascend-blue/10" : "border-white/8 bg-white/5"
+                    mode === s.mode ? "border-ascend-blue/40 bg-ascend-blue/10" : "border-chalk-300/8 bg-white/5"
                   )}
                 >
                   <div>
@@ -156,7 +156,7 @@ export default function CreateGoalPage() {
                     "flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3.5 transition-colors",
                     (c === "sport" ? isSportFlow : category === c && !isSportFlow)
                       ? "border-volt-500/40 bg-volt-500/10"
-                      : "border-white/8 bg-white/5"
+                      : "border-chalk-300/8 bg-white/5"
                   )}
                 >
                   <span className="text-xl">{categoryEmoji(c)}</span>
@@ -178,7 +178,7 @@ export default function CreateGoalPage() {
                 onClick={() => setCategory(s)}
                 className={cn(
                   "flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3.5 transition-colors",
-                  category === s ? "border-volt-500/40 bg-volt-500/10" : "border-white/8 bg-white/5"
+                  category === s ? "border-volt-500/40 bg-volt-500/10" : "border-chalk-300/8 bg-white/5"
                 )}
               >
                 <span className="text-xl">{categoryEmoji(s)}</span>
@@ -196,7 +196,7 @@ export default function CreateGoalPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. 100 Push-Ups Daily"
-              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+              className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             />
           </Field>
           <Field label="Description">
@@ -205,7 +205,7 @@ export default function CreateGoalPage() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What does showing up look like?"
               rows={3}
-              className="resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+              className="resize-none rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             />
           </Field>
           <p className="text-xs text-chalk-500">
@@ -224,7 +224,7 @@ export default function CreateGoalPage() {
                   onChange={(e) => setDurationDays(Math.max(1, Number(e.target.value) || 1))}
                   onBlur={() => setEditingDuration(false)}
                   onKeyDown={(e) => e.key === "Enter" && setEditingDuration(false)}
-                  className="w-20 rounded-lg border border-white/8 bg-white/5 px-2 py-1 text-right text-xs font-bold text-chalk-100 outline-none focus:border-ascend-blue"
+                  className="w-20 rounded-lg border border-chalk-300/8 bg-white/5 px-2 py-1 text-right text-xs font-bold text-chalk-100 outline-none focus:border-ascend-blue"
                 />
               ) : (
                 <button
@@ -242,7 +242,7 @@ export default function CreateGoalPage() {
               max={90}
               value={Math.min(90, Math.max(3, durationDays))}
               onChange={(e) => setDurationDays(Number(e.target.value))}
-              className="accent-[#1379c9]"
+              className="accent-[#2e7bff]"
             />
             <p className="text-xs text-chalk-700">Drag for up to 90 days, or tap the number to set any length.</p>
           </div>
@@ -261,7 +261,7 @@ export default function CreateGoalPage() {
                       "rounded-pill border px-3.5 py-2 text-xs font-semibold transition-colors",
                       stakePreset === p.key
                         ? "border-volt-500/40 bg-volt-500/10 text-volt-400"
-                        : "border-white/8 bg-white/5 text-chalk-300"
+                        : "border-chalk-300/8 bg-white/5 text-chalk-300"
                     )}
                   >
                     {p.label}
@@ -274,7 +274,7 @@ export default function CreateGoalPage() {
                     "rounded-pill border px-3.5 py-2 text-xs font-semibold transition-colors",
                     stakePreset === "custom"
                       ? "border-volt-500/40 bg-volt-500/10 text-volt-400"
-                      : "border-white/8 bg-white/5 text-chalk-300"
+                      : "border-chalk-300/8 bg-white/5 text-chalk-300"
                   )}
                 >
                   ✏️ Custom
@@ -285,7 +285,7 @@ export default function CreateGoalPage() {
                   value={customStake}
                   onChange={(e) => setCustomStake(e.target.value)}
                   placeholder="e.g. Whoever breaks the chain does the dishes for a week"
-                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                  className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
                 />
               )}
               <p className="text-xs text-chalk-500">Real stakes and penalties are coming later — for now, this is honor-system consequence.</p>
@@ -310,7 +310,7 @@ export default function CreateGoalPage() {
                       onClick={() => toggleInvitee(u.id)}
                       className={cn(
                         "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors",
-                        selected ? "border-volt-500/40 bg-volt-500/10" : "border-white/8 bg-white/5"
+                        selected ? "border-volt-500/40 bg-volt-500/10" : "border-chalk-300/8 bg-white/5"
                       )}
                     >
                       <Avatar initials={u.avatarInitials} gradient={u.avatarColor} size={36} />
@@ -321,7 +321,7 @@ export default function CreateGoalPage() {
                       <div
                         className={cn(
                           "flex h-5 w-5 items-center justify-center rounded-full border",
-                          selected ? "border-volt-500 bg-volt-500 text-ink-950" : "border-white/20"
+                          selected ? "border-volt-500 bg-volt-500 text-white" : "border-chalk-300/20"
                         )}
                       >
                         {selected && "✓"}
@@ -344,11 +344,11 @@ export default function CreateGoalPage() {
         <div className="flex flex-col gap-4 px-5">
           <div
             className="relative overflow-hidden rounded-[var(--radius-card)] p-6"
-            style={{ background: "linear-gradient(135deg,#0b3f7a,#35c2f2)" }}
+            style={{ background: "linear-gradient(135deg,#1e3a66,#2e7bff)" }}
           >
             <div className="noise-overlay absolute inset-0" />
             <div className="relative flex items-center justify-between">
-              <Pill tone="neutral" className="!border-white/20 bg-black/25 !text-white">
+              <Pill tone="neutral" className="!border-chalk-300/20 bg-black/25 !text-white">
                 {category && categoryLabel(category)}
               </Pill>
               <span className="text-2xl">{category && categoryEmoji(category)}</span>

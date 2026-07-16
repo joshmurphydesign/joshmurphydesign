@@ -12,7 +12,7 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-pill font-semibold transition-transform active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none";
+    "font-ui inline-flex items-center justify-center gap-2 rounded-pill font-semibold transition-transform active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none";
 
   const sizes: Record<Size, string> = {
     sm: "px-4 py-2 text-sm",
@@ -22,9 +22,9 @@ export function Button({
 
   const variants: Record<Variant, string> = {
     primary: "bg-ascend-gradient text-white shadow-[var(--shadow-glow-blue)]",
-    volt: "bg-volt-gradient text-ink-950 shadow-[var(--shadow-glow-volt)]",
+    volt: "bg-volt-gradient text-white shadow-[var(--shadow-glow-volt)]",
     ghost: "bg-white/5 text-chalk-100 hover:bg-white/10",
-    outline: "border border-white/15 text-chalk-100 hover:bg-white/5",
+    outline: "border border-chalk-300/15 text-chalk-100 hover:bg-white/5",
     danger: "bg-rival-500/15 text-[#ff8fa0] border border-rival-500/30",
   };
 

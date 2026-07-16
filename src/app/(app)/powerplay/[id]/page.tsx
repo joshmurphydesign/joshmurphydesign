@@ -42,7 +42,7 @@ export default function PowerPlayDetailPage() {
         >
           <div className="noise-overlay absolute inset-0" />
           <div className="relative flex items-center justify-between">
-            <Pill tone={powerPlay.isLive ? "live" : "neutral"} className={powerPlay.isLive ? "animate-pulse-ring bg-black/20 !text-white" : "bg-black/25 !border-white/20 !text-white"}>
+            <Pill tone={powerPlay.isLive ? "live" : "neutral"} className={powerPlay.isLive ? "animate-pulse-ring bg-black/20 !text-white" : "bg-black/25 !border-chalk-300/20 !text-white"}>
               <IconBolt className="h-3 w-3" />
               {powerPlay.isLive ? "Live now" : upcoming ? "Upcoming" : "Ended"}
             </Pill>
@@ -79,11 +79,11 @@ export default function PowerPlayDetailPage() {
       )}
 
       <div className="flex flex-col gap-2.5 px-5">
-        <h2 className="font-display text-lg tracking-wide text-chalk-100">Rules</h2>
+        <h2 className="font-ui text-lg tracking-wide text-chalk-100">Rules</h2>
         <div className="card-surface flex flex-col gap-2.5 rounded-[var(--radius-card)] p-4">
           {powerPlay.rules.map((rule, i) => (
             <div key={i} className="flex gap-2.5 text-sm text-chalk-300">
-              <span className="font-display text-ascend-gradient">{i + 1}</span>
+              <span className="font-stat text-ascend-gradient">{i + 1}</span>
               <span>{rule}</span>
             </div>
           ))}
@@ -91,7 +91,7 @@ export default function PowerPlayDetailPage() {
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Leaderboard</h2>
+        <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Leaderboard</h2>
         <div className="flex flex-col gap-2 px-5">
           {powerPlay.leaderboard
             .slice()

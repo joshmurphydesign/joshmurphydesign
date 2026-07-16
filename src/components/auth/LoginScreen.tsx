@@ -74,7 +74,7 @@ export function LoginScreen() {
           <AscendMark size={24} />
         </div>
         <div>
-          <p className="font-display text-lg leading-none tracking-wide">ASCEND</p>
+          <p className="font-ui font-bold text-lg leading-none tracking-wide">ASCEND</p>
           <p className="mt-1 flex items-center gap-1 whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.2em] text-chalk-500">
             <span>Show Up.</span>
             <span className="text-chalk-700">|</span>
@@ -139,7 +139,7 @@ export function LoginScreen() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Jordan Ellis"
-              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+              className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
               autoComplete="name"
             />
           </label>
@@ -152,7 +152,7 @@ export function LoginScreen() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@ascend.app"
-            className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+            className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             autoComplete="email"
           />
         </label>
@@ -164,7 +164,7 @@ export function LoginScreen() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+            className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
           />
         </label>
@@ -186,7 +186,7 @@ export function LoginScreen() {
                       "flex items-center gap-1.5 rounded-pill border px-3 py-2 text-xs font-semibold transition-colors",
                       active
                         ? "border-volt-500/40 bg-volt-500/15 text-volt-400"
-                        : "border-white/8 bg-white/5 text-chalk-500"
+                        : "border-chalk-300/8 bg-white/5 text-chalk-500"
                     )}
                   >
                     <span>{categoryEmoji(cat)}</span>
@@ -200,7 +200,7 @@ export function LoginScreen() {
 
         <div className="mt-auto flex flex-col gap-3 pt-4">
           {error && (
-            <p className="rounded-2xl border border-[#ff3b5c]/30 bg-[#ff3b5c]/10 px-4 py-3 text-center text-xs font-semibold text-[#ff8fa0]">
+            <p className="rounded-2xl border border-rival-500/30 bg-rival-500/10 px-4 py-3 text-center text-xs font-semibold text-[#ff8fa0]">
               {error}
             </p>
           )}

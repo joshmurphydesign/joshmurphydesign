@@ -84,14 +84,14 @@ export default function HomePage() {
       <div className="px-5">
         <div
           className="relative overflow-hidden rounded-[var(--radius-card)] p-6"
-          style={{ background: "linear-gradient(135deg,#0b3f7a,#35c2f2)" }}
+          style={{ background: "linear-gradient(135deg,#1e3a66,#2e7bff)" }}
         >
           <div className="noise-overlay absolute inset-0" />
           <div className="relative flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Current streak</p>
               <div className="mt-1 flex items-baseline gap-2">
-                <span className="font-display text-5xl leading-none text-white">{bestStreak}</span>
+                <span className="font-stat text-5xl leading-none text-white">{bestStreak}</span>
                 <span className="text-sm font-semibold text-white/80">{bestStreak === 1 ? "day" : "days"}</span>
               </div>
             </div>
@@ -137,7 +137,7 @@ export default function HomePage() {
               </div>
             </div>
             {primary.status === "checked-in" ? (
-              <div className="mt-4 flex items-center justify-center gap-2 rounded-pill bg-volt-500/15 py-3 text-sm font-bold text-volt-400">
+              <div className="mt-4 flex items-center justify-center gap-2 rounded-pill bg-success-500/15 py-3 text-sm font-bold text-success-500">
                 <IconCheck className="h-4 w-4" /> Checked in today
               </div>
             ) : (

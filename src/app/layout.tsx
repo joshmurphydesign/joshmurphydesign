@@ -1,19 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo_Black, Manrope } from "next/font/google";
+import { Inter, Oxanium, Rajdhani, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { DataProvider } from "@/lib/data-context";
 
-const archivoBlack = Archivo_Black({
-  variable: "--font-archivo-black",
+// Brand type system: Oxanium for headlines/hero moments, Space Grotesk for
+// section headers/buttons/nav/labels, Inter for body copy, Rajdhani for
+// streak counts and performance numbers.
+const oxanium = Oxanium({
+  variable: "--font-oxanium",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["600", "700"],
 });
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["500", "700"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const rajdhani = Rajdhani({
+  variable: "--font-rajdhani",
+  subsets: ["latin"],
+  weight: ["600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -27,7 +42,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#08090d",
+  themeColor: "#05070d",
 };
 
 export default function RootLayout({
@@ -38,7 +53,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${archivoBlack.variable} ${manrope.variable} h-full antialiased`}
+      className={`${oxanium.variable} ${spaceGrotesk.variable} ${inter.variable} ${rajdhani.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-ink-950 text-chalk-100">
         <AuthProvider>

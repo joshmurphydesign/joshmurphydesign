@@ -23,7 +23,7 @@ export default function DiscoverPage() {
       <TopBar title="Discover" onBack />
 
       <section className="flex flex-col gap-3">
-        <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Open goals & challenges</h2>
+        <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Open goals & challenges</h2>
         {discoverableGoals.length > 0 ? (
           <div className="flex flex-col gap-3 px-5">
             {discoverableGoals.map((g) => (
@@ -37,7 +37,7 @@ export default function DiscoverPage() {
 
       {discoverablePowerPlays.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Power Plays</h2>
+          <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Power Plays</h2>
           <div className="flex gap-3 overflow-x-auto px-5 pb-1">
             {discoverablePowerPlays.map((pp) => (
               <PowerPlayCard key={pp.id} powerPlay={pp} />
@@ -47,7 +47,7 @@ export default function DiscoverPage() {
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Athletes to follow</h2>
+        <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Athletes to follow</h2>
         <div className="flex flex-col gap-2 px-5">
           {otherUsers.map((u) => {
             const isFollowing = following.includes(u.id);

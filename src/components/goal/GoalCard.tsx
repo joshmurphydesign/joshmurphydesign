@@ -54,7 +54,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
               aria-label={loggedToday ? "Logged today" : "Log today's progress"}
               className={cn(
                 "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform active:scale-90",
-                loggedToday ? "bg-volt-500/15 text-volt-400" : "bg-ascend-gradient text-white"
+                loggedToday ? "bg-success-500/15 text-success-500" : "bg-ascend-gradient text-white"
               )}
             >
               {loggedToday ? <IconCheck className="h-3.5 w-3.5" /> : <IconPlus className="h-3.5 w-3.5" />}
@@ -65,7 +65,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
 
       <div className="mt-4 flex items-center justify-between text-xs text-chalk-500">
         <span>Progress</span>
-        <span className="font-bold text-chalk-100">{goal.progress}%</span>
+        <span className="font-stat font-bold text-chalk-100">{goal.progress}%</span>
       </div>
       <ProgressBar
         value={goal.progress}

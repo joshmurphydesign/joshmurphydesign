@@ -218,7 +218,7 @@ export default function GoalDetailPage() {
         >
           <div className="noise-overlay absolute inset-0" />
           <div className="relative flex items-center justify-between">
-            <Pill tone={MODE_TONE[goal.mode] ?? "neutral"} className="bg-black/25 !border-white/20 !text-white">
+            <Pill tone={MODE_TONE[goal.mode] ?? "neutral"} className="bg-black/25 !border-chalk-300/20 !text-white">
               {modeLabel(goal.mode)}
             </Pill>
             <span className="text-3xl">{categoryEmoji(goal.category)}</span>
@@ -291,7 +291,7 @@ export default function GoalDetailPage() {
             <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">Payout</p>
             {iAmWinner ? (
               <>
-                <p className="mt-0.5 font-display text-xl text-chalk-100">
+                <p className="mt-0.5 font-ui text-xl text-chalk-100">
                   You&apos;re owed ${payout.totalCollected}
                 </p>
                 <p className="mt-1 text-xs text-chalk-500">
@@ -315,7 +315,7 @@ export default function GoalDetailPage() {
               </>
             ) : (
               <>
-                <p className="mt-0.5 font-display text-xl text-chalk-100">
+                <p className="mt-0.5 font-ui text-xl text-chalk-100">
                   You owe {winner?.name ?? "the winner"} ${payout.amountPerPerson}
                 </p>
                 <p className="mt-1 text-xs text-chalk-500">
@@ -334,7 +334,7 @@ export default function GoalDetailPage() {
                             href={paymentLink(provider, handle, payout.amountPerPerson, `${goal.title} on Ascend`)}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-pill border border-white/15 px-3.5 py-2 text-xs font-semibold text-chalk-100"
+                            className="inline-flex items-center gap-1.5 rounded-pill border border-chalk-300/15 px-3.5 py-2 text-xs font-semibold text-chalk-100"
                           >
                             {meta.emoji} Pay via {meta.label}
                           </a>
@@ -446,7 +446,7 @@ export default function GoalDetailPage() {
               )}
               <Link
                 href={`/pulse/new?goalId=${goal.id}`}
-                className="inline-flex items-center justify-center gap-2 rounded-pill border border-white/15 px-5 py-3 text-sm font-semibold text-chalk-100 transition-transform active:scale-[0.97]"
+                className="inline-flex items-center justify-center gap-2 rounded-pill border border-chalk-300/15 px-5 py-3 text-sm font-semibold text-chalk-100 transition-transform active:scale-[0.97]"
               >
                 <IconCamera className="h-4 w-4" /> Share a highlight
               </Link>
@@ -460,7 +460,7 @@ export default function GoalDetailPage() {
                   value={joinStartValue}
                   onChange={(e) => setJoinStartValue(e.target.value)}
                   placeholder={`Your starting ${goal.unit}`}
-                  className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                  className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
                 />
               )}
               <Button
@@ -478,7 +478,7 @@ export default function GoalDetailPage() {
       </div>
 
       <div className="flex flex-col gap-3 px-5">
-        <h2 className="font-display text-lg tracking-wide text-chalk-100">
+        <h2 className="font-ui text-lg tracking-wide text-chalk-100">
           Your group <span className="text-chalk-500">({goal.participants.length})</span>
         </h2>
         <div className="flex flex-col gap-2">
@@ -510,7 +510,7 @@ export default function GoalDetailPage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Check-ins</h2>
+        <h2 className="px-5 font-ui text-lg tracking-wide text-chalk-100">Check-ins</h2>
         <div className="flex flex-col gap-2 px-5">
           {relatedPosts.length > 0 ? (
             relatedPosts.map((post) => {
@@ -528,7 +528,7 @@ export default function GoalDetailPage() {
                         </span>
                       )}
                       {confirmCount > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-pill bg-volt-500/10 px-2.5 py-1 text-[11px] font-semibold text-volt-400">
+                        <span className="inline-flex items-center gap-1 rounded-pill bg-success-500/10 px-2.5 py-1 text-[11px] font-semibold text-success-500">
                           {"\u{2705}"} Confirmed by {confirmCount}
                         </span>
                       )}
@@ -541,8 +541,8 @@ export default function GoalDetailPage() {
                       className={cn(
                         "self-start rounded-pill border px-3.5 py-1.5 text-xs font-semibold transition-colors",
                         iConfirmed
-                          ? "border-volt-500/40 bg-volt-500/10 text-volt-400"
-                          : "border-white/10 bg-white/5 text-chalk-300"
+                          ? "border-success-500/40 bg-success-500/10 text-success-500"
+                          : "border-chalk-300/10 bg-white/5 text-chalk-300"
                       )}
                     >
                       {"\u{2705}"} {iConfirmed ? "Confirmed" : "Confirm this check-in"}
@@ -559,7 +559,7 @@ export default function GoalDetailPage() {
 
       {logModalOpen && (
         <BottomSheet onClose={() => setLogModalOpen(false)}>
-          <p className="text-center font-display text-lg text-chalk-100">
+          <p className="text-center font-ui text-lg text-chalk-100">
             {needsNumericLog ? "Log an entry" : "Check in"}
           </p>
           <p className="mt-1 text-center text-sm text-chalk-500">{goal.title}</p>
@@ -576,7 +576,7 @@ export default function GoalDetailPage() {
                 onChange={(e) => setLogValue(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitLog()}
                 placeholder="0"
-                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+                className="rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
               />
             </label>
           )}
@@ -597,7 +597,7 @@ export default function GoalDetailPage() {
                 </button>
               </div>
             ) : (
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/5 py-4 text-xs font-semibold text-chalk-500">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-chalk-300/15 bg-white/5 py-4 text-xs font-semibold text-chalk-500">
                 <IconCamera className="h-4 w-4" /> Attach a photo
                 <input
                   type="file"
@@ -629,7 +629,7 @@ export default function GoalDetailPage() {
 
       {inviteSheetOpen && (
         <BottomSheet onClose={() => setInviteSheetOpen(false)}>
-          <p className="text-center font-display text-lg text-chalk-100">Invite people</p>
+          <p className="text-center font-ui text-lg text-chalk-100">Invite people</p>
           <p className="mt-1 text-center text-sm text-chalk-500">{goal.title}</p>
           <div className="mt-5 flex max-h-72 flex-col gap-2 overflow-y-auto">
             {notInvited.length > 0 ? (
@@ -641,7 +641,7 @@ export default function GoalDetailPage() {
                     onClick={() => toggleInvitee(u.id)}
                     className={cn(
                       "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors",
-                      selected ? "border-volt-500/40 bg-volt-500/10" : "border-white/8 bg-white/5"
+                      selected ? "border-volt-500/40 bg-volt-500/10" : "border-chalk-300/8 bg-white/5"
                     )}
                   >
                     <Avatar initials={u.avatarInitials} gradient={u.avatarColor} size={36} />
@@ -652,7 +652,7 @@ export default function GoalDetailPage() {
                     <div
                       className={cn(
                         "flex h-5 w-5 items-center justify-center rounded-full border",
-                        selected ? "border-volt-500 bg-volt-500 text-ink-950" : "border-white/20"
+                        selected ? "border-volt-500 bg-volt-500 text-white" : "border-chalk-300/20"
                       )}
                     >
                       {selected && "✓"}
@@ -681,7 +681,7 @@ export default function GoalDetailPage() {
 function MiniStat({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
     <div className="card-surface flex flex-col items-center gap-0.5 rounded-2xl py-3.5 text-center">
-      <p className="font-display text-lg leading-none text-chalk-100">{value}</p>
+      <p className="font-stat text-lg leading-none text-chalk-100">{value}</p>
       <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">{label}</p>
       <p className="text-[10px] text-chalk-700">{sub}</p>
     </div>

@@ -104,7 +104,7 @@ function ComposerScreen() {
         ) : (
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border border-dashed border-white/15 bg-white/5 text-chalk-500"
+            className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border border-dashed border-chalk-300/15 bg-white/5 text-chalk-500"
           >
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-ascend-gradient">
               <IconCamera className="h-6 w-6 text-white" />
@@ -122,7 +122,7 @@ function ComposerScreen() {
           onChange={(e) => setCaption(e.target.value)}
           placeholder={postAsInvite ? "Why should people join you?" : "What's the highlight?"}
           rows={3}
-          className="w-full resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+          className="w-full resize-none rounded-2xl border border-chalk-300/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
         />
       </div>
 
@@ -144,7 +144,7 @@ function ComposerScreen() {
                   onClick={() => setGoalId(selected ? null : g.id)}
                   className={cn(
                     "flex shrink-0 items-center gap-2 rounded-pill border px-3.5 py-2 text-xs font-semibold transition-colors",
-                    selected ? "border-volt-500/40 bg-volt-500/10 text-volt-400" : "border-white/8 bg-white/5 text-chalk-300"
+                    selected ? "border-volt-500/40 bg-volt-500/10 text-volt-400" : "border-chalk-300/8 bg-white/5 text-chalk-300"
                   )}
                 >
                   <span>{categoryEmoji(g.category)}</span>
@@ -171,13 +171,13 @@ function ComposerScreen() {
             onClick={() => setPostAsInvite((v) => !v)}
             className={cn(
               "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors",
-              postAsInvite ? "border-ascend-blue/40 bg-ascend-blue/10" : "border-white/8 bg-white/5"
+              postAsInvite ? "border-ascend-blue/40 bg-ascend-blue/10" : "border-chalk-300/8 bg-white/5"
             )}
           >
             <div
               className={cn(
                 "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-                postAsInvite ? "border-ascend-blue bg-ascend-blue text-white" : "border-white/20"
+                postAsInvite ? "border-ascend-blue bg-ascend-blue text-white" : "border-chalk-300/20"
               )}
             >
               {postAsInvite && "✓"}

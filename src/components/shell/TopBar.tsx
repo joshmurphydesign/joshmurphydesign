@@ -36,7 +36,7 @@ export function TopBar({
           <IconChevronLeft className="h-5 w-5" />
         </button>
       )}
-      {title && <h1 className="flex-1 truncate font-display text-lg tracking-wide text-chalk-100">{title}</h1>}
+      {title && <h1 className="flex-1 truncate font-ui text-lg tracking-wide text-chalk-100">{title}</h1>}
       {!title && <div className="flex-1" />}
       {right}
     </header>
