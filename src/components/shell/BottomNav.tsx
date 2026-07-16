@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { IconFeed, IconHome, IconPlus, IconTrophy, IconUser } from "@/components/ui/Icons";
+import { AscendMark } from "@/components/ui/AscendMark";
 
 const ITEMS = [
   { href: "/home", label: "Home", icon: IconHome },
@@ -30,7 +31,7 @@ export function BottomNav() {
                 aria-label={label}
                 className="relative -mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-ascend-gradient shadow-[var(--shadow-glow-blue)] transition-transform active:scale-95"
               >
-                <Icon className="h-6 w-6 text-white" />
+                <AscendMark size={30} />
               </Link>
             );
           }
