@@ -56,7 +56,7 @@ function ComposerScreen() {
       imageUrl: imageUrl ?? undefined,
       goalId: goalId ?? undefined,
     });
-    router.replace("/feed");
+    router.replace("/pulse");
   };
 
   return (

@@ -10,7 +10,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { GoalCard } from "@/components/goal/GoalCard";
 import { GroupRoster } from "@/components/goal/GroupRoster";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { IconCheck, IconMessage } from "@/components/ui/Icons";
+import { IconCheck, IconMessage, IconPlus } from "@/components/ui/Icons";
 import { checkInStatus } from "@/lib/streak-status";
 import { metricIsEntryBased } from "@/lib/metric-presets";
 import { byImportance } from "@/lib/feed-ranking";
@@ -71,6 +71,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <HeaderIconLink href="/create" icon={<IconPlus className="h-5 w-5" />} label="New commitment" />
           <HeaderIconLink
             href="/messages"
             icon={<IconMessage className="h-5 w-5" />}
@@ -154,7 +155,7 @@ export default function HomePage() {
 
       {groupCommitments.length > 0 && (
         <section className="flex flex-col gap-3">
-          <SectionHeader title="Your groups" subtitle="Who's shown up today" />
+          <SectionHeader title="Your groups" subtitle="Who's shown up today" href="/groups" hrefLabel="See all" />
           <div className="flex flex-col gap-4 px-5">
             {groupCommitments.slice(0, 3).map(({ goal }) => (
               <Link key={goal.id} href={`/goal/${goal.id}`} className="card-surface rounded-2xl p-4">
@@ -173,7 +174,7 @@ export default function HomePage() {
 
       {latestHighlights.length > 0 && (
         <section className="flex flex-col gap-3">
-          <SectionHeader title="Latest highlights" subtitle="Wins and streaks from your groups" href="/feed" hrefLabel="See all" />
+          <SectionHeader title="Latest highlights" subtitle="Wins and streaks from your groups" href="/pulse" hrefLabel="See all" />
           <div className="flex flex-col gap-3 px-5">
             {latestHighlights.map((post) => (
               <FeedPostCard key={post.id} post={post} />
