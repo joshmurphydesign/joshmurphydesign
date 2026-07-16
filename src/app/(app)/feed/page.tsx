@@ -1,45 +1,45 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import Link from "next/link";
 import { useData } from "@/lib/data-context";
 import { TopBar } from "@/components/shell/TopBar";
 import { NotificationsButton } from "@/components/shell/NotificationsButton";
 import { HeaderIconLink } from "@/components/shell/HeaderIconLink";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { PowerPlayCard } from "@/components/powerplay/PowerPlayCard";
-import { IconCamera, IconMessage, IconSearch } from "@/components/ui/Icons";
-import { cn } from "@/lib/utils";
-import type { Post } from "@/lib/types";
+import { GroupRoster } from "@/components/goal/GroupRoster";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { IconCamera, IconMessage } from "@/components/ui/Icons";
+import { metricIsEntryBased } from "@/lib/metric-presets";
 
-const FILTERS: { key: string; label: string; match?: Post["type"] }[] = [
-  { key: "all", label: "All" },
-  { key: "progress", label: "Progress", match: "progress" },
-  { key: "win", label: "Wins", match: "win" },
-  { key: "streak", label: "Streaks", match: "streak" },
-  { key: "competition-result", label: "Competitions", match: "competition-result" },
-  { key: "powerplay", label: "Power Plays", match: "powerplay" },
-];
+export default function GroupsPage() {
+  const { goals, posts, threads } = useData();
 
-export default function FeedPage() {
-  const { posts, powerPlays, threads } = useData();
-  const [filter, setFilter] = useState("all");
-
-  const sorted = useMemo(
-    () => [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [posts]
+  const myGoals = useMemo(() => goals.filter((g) => g.participants.some((p) => p.userId === "me")), [goals]);
+  // Only daily-obligation commitments (binary check-ins, cumulative running totals)
+  // have a "did you show up today" cadence — entry-based goals are attempts logged
+  // whenever they happen, so a "missed" badge on them would be misleading.
+  const myGroups = useMemo(
+    () => myGoals.filter((g) => g.participants.length > 1 && !metricIsEntryBased(g.metric.type)),
+    [myGoals]
   );
-  const filtered = filter === "all" ? sorted : sorted.filter((p) => p.type === filter);
-  const livePowerPlays = powerPlays.filter((p) => p.isLive);
+  const myGoalIds = useMemo(() => new Set(myGoals.map((g) => g.id)), [myGoals]);
+  const activity = useMemo(
+    () =>
+      [...posts]
+        .filter((p) => p.goalId && myGoalIds.has(p.goalId))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [posts, myGoalIds]
+  );
   const hasUnreadThreads = threads.some((t) => t.unread);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <TopBar
-        title="Feed"
+        title="Groups"
         right={
           <div className="flex items-center gap-2">
-            <HeaderIconLink href="/feed/new" icon={<IconCamera className="h-5 w-5" />} label="New post" />
-            <HeaderIconLink href="/discover" icon={<IconSearch className="h-5 w-5" />} label="Discover" />
+            <HeaderIconLink href="/feed/new" icon={<IconCamera className="h-5 w-5" />} label="New update" />
             <HeaderIconLink
               href="/messages"
               icon={<IconMessage className="h-5 w-5" />}
@@ -51,37 +51,37 @@ export default function FeedPage() {
         }
       />
 
-      {livePowerPlays.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto px-5 pb-1">
-          {livePowerPlays.map((pp) => (
-            <PowerPlayCard key={pp.id} powerPlay={pp} />
-          ))}
-        </div>
+      {myGroups.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <SectionHeader title="Your groups" subtitle="Who's shown up today" />
+          <div className="flex flex-col gap-3 px-5">
+            {myGroups.map((g) => (
+              <Link key={g.id} href={`/goal/${g.id}`} className="card-surface rounded-2xl p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-chalk-100">{g.title}</p>
+                  <span className="text-xs font-semibold text-chalk-500">{g.streak} day streak</span>
+                </div>
+                <div className="mt-3">
+                  <GroupRoster participants={g.participants} size={36} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
-      <div className="flex gap-2 overflow-x-auto px-5 pb-1">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={cn(
-              "shrink-0 rounded-pill px-3.5 py-2 text-xs font-semibold transition-colors",
-              filter === f.key ? "bg-ascend-gradient text-white" : "bg-white/6 text-chalk-500"
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-3 px-5">
-        {filtered.map((post) => (
-          <FeedPostCard key={post.id} post={post} />
-        ))}
-        {filtered.length === 0 && (
-          <p className="py-10 text-center text-sm text-chalk-500">Nothing here yet.</p>
-        )}
-      </div>
+      <section className="flex flex-col gap-3">
+        <SectionHeader title="Activity" subtitle="Check-ins from your commitments" />
+        <div className="flex flex-col gap-3 px-5">
+          {activity.length > 0 ? (
+            activity.map((post) => <FeedPostCard key={post.id} post={post} />)
+          ) : (
+            <p className="py-10 text-center text-sm text-chalk-500">
+              No activity yet. Check in on a commitment to get things moving.
+            </p>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

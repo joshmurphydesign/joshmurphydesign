@@ -81,7 +81,7 @@ interface DataContextValue {
   }) => Promise<Goal>;
   markNotificationsRead: () => Promise<void>;
   createPost: (params: { body: string; imageUrl?: string; goalId?: string }) => Promise<void>;
-  logProgress: (goalId: string, value?: number, source?: "manual" | "health") => Promise<void>;
+  logProgress: (goalId: string, value?: number, source?: "manual" | "health", imageUrl?: string) => Promise<void>;
   spendStreakFreeze: (goalId: string) => Promise<void>;
   settleGoal: (goalId: string) => Promise<void>;
   markStakePaid: (goalId: string) => Promise<void>;
@@ -285,7 +285,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, [userId]);
 
   const logProgress = useCallback(
-    async (goalId: string, value?: number, source: "manual" | "health" = "manual") => {
+    async (goalId: string, value?: number, source: "manual" | "health" = "manual", imageUrl?: string) => {
       const providerLabel =
         source === "health"
           ? health?.provider === "apple"
@@ -299,7 +299,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch(`/api/goals/${goalId}/log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value, source, providerLabel, providerEmoji }),
+        body: JSON.stringify({ value, source, providerLabel, providerEmoji, imageUrl }),
       });
       const data = await parseJson<{
         goal?: Goal;

@@ -43,6 +43,17 @@ export function IconUser(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconUsers(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9" cy="8.5" r="3" />
+      <path d="M3 19.5a6 6 0 0 1 12 0" />
+      <path d="M15.5 6a3 3 0 0 1 0 5.8" />
+      <path d="M17 13.5a5.5 5.5 0 0 1 4 5.3" />
+    </svg>
+  );
+}
+
 export function IconPlus(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" {...props}>

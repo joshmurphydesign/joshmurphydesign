@@ -11,6 +11,8 @@ const bodySchema = z.object({
   source: z.enum(["manual", "health"]).optional(),
   providerLabel: z.string().max(60).optional(),
   providerEmoji: z.string().max(8).optional(),
+  /** Optional proof photo attached to a check-in — a data URL, resized client-side. */
+  imageUrl: z.string().max(2_000_000).optional(),
 });
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -29,7 +31,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request." }, { status: 400 });
-  const { value, providerLabel, providerEmoji } = parsed.data;
+  const { value, providerLabel, providerEmoji, imageUrl } = parsed.data;
   const source = parsed.data.source ?? "manual";
 
   const goal = await db.goal.findUnique({ where: { id }, include: { participants: true } });
@@ -81,7 +83,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const milestone = !isEntryBased && !alreadyLoggedToday && nextStreak > 0 && nextStreak % 7 === 0;
   const hitTarget = nextProgress >= 100 && participant.progress < 100;
   const isHealthSync = source === "health";
-  const shouldPostToFeed = !isHealthSync || !alreadyLoggedToday || hitTarget || milestone;
+  const shouldPostToFeed = !isHealthSync || !alreadyLoggedToday || hitTarget || milestone || !!imageUrl;
   const valueLabel =
     metricType === "binary" ? undefined : isCumulative ? `${nextCurrentValue} ${goal.unit} logged` : `${nextCurrentValue} ${goal.unit}`;
 
@@ -98,7 +100,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           ? `${providerEmoji ?? ""} ${providerLabel} synced ${goal.title}`.trim()
           : alreadyLoggedToday
             ? `Added more to ${goal.title}`
-            : `Logged progress on ${goal.title}`;
+            : imageUrl
+              ? `Checked in on ${goal.title} — with proof`
+              : `Checked in on ${goal.title}`;
   const body = hitTarget
     ? "Target complete. Show up, stand out — mission accomplished."
     : milestone
@@ -109,7 +113,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           : `Attempt logged — best stays ${nextCurrentValue} ${goal.unit}.`
         : valueLabel
           ? `${isHealthSync ? "Auto-synced" : alreadyLoggedToday ? "Another entry" : `Day ${nextStreak} logged`} — ${valueLabel}. ${nextProgress}% of the way there.`
-          : `Day ${nextStreak} logged. ${nextProgress}% of the way there.`;
+          : `Day ${nextStreak}. The chain holds.`;
 
   const otherParticipants = goal.participants.filter((p) => p.userId !== me.id);
   const aggregateProgress = Math.round(
@@ -155,6 +159,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           body,
           statValue: `${nextProgress}%`,
           statLabel: "progress",
+          imageUrl,
           createdAt: now,
         },
         include: { reactions: true, comments: true },

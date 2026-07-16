@@ -9,6 +9,7 @@ import { pointsForPlacement } from "@/lib/goal-utils";
 import { isStepsGoal, metricIsCumulative, metricIsEntryBased, metricNeedsBaseline, metricNeedsNumericLog } from "@/lib/metric-presets";
 import { computeStakePayout, PAYMENT_PROVIDERS, PAYMENT_PROVIDER_META, paymentLink } from "@/lib/payments";
 import { useUserMap } from "@/lib/people";
+import { checkInStatus } from "@/lib/streak-status";
 import { TopBar } from "@/components/shell/TopBar";
 import { Pill } from "@/components/ui/Pill";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -16,9 +17,10 @@ import { StreakBadge } from "@/components/ui/StreakBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { BottomSheet } from "@/components/ui/BottomSheet";
-import { IconCamera, IconCheck, IconChevronRight } from "@/components/ui/Icons";
+import { GroupRoster } from "@/components/goal/GroupRoster";
+import { IconCamera, IconCheck, IconChevronRight, IconX } from "@/components/ui/Icons";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
-import { categoryEmoji, daysUntil, isToday, modeLabel, timeAgo } from "@/lib/utils";
+import { categoryEmoji, cn, daysUntil, isToday, modeLabel, resizeImageFile, timeAgo } from "@/lib/utils";
 
 function formatValue(n: number): string {
   return n.toLocaleString();
@@ -34,7 +36,7 @@ const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
 export default function GoalDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { goals, posts, health, joinGoal, logProgress, spendStreakFreeze, settleGoal, markStakePaid } = useData();
+  const { goals, posts, health, joinGoal, logProgress, spendStreakFreeze, settleGoal, markStakePaid, toggleReaction } = useData();
   const userMap = useUserMap();
 
   const goal = goals.find((g) => g.id === params.id);
@@ -42,6 +44,10 @@ export default function GoalDetailPage() {
   const [logValue, setLogValue] = useState("");
   const [joinStartValue, setJoinStartValue] = useState("");
   const [logModalOpen, setLogModalOpen] = useState(false);
+  const [proofPhoto, setProofPhoto] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [confirming, setConfirming] = useState<string | null>(null);
 
   if (!goal) {
     return (
@@ -57,7 +63,10 @@ export default function GoalDetailPage() {
   const iAmOwner = !!me?.isOwner;
   const loggedToday = isToday(me?.lastLoggedAt);
   const isEntryBased = metricIsEntryBased(goal.metric.type);
-  const streakAtRisk = !isEntryBased && iAmIn && !!me?.lastLoggedAt && !loggedToday && goal.streak > 0;
+  const myStatus = checkInStatus(me?.lastLoggedAt);
+  const chainBroken = !isEntryBased && iAmIn && myStatus === "missed";
+  const streakAtRisk = !isEntryBased && iAmIn && myStatus === "pending" && goal.streak > 0;
+  const isGroupCommitment = goal.participants.length > 1;
   const sortedParticipants = [...goal.participants].sort((a, b) => b.progress - a.progress);
   const relatedPosts = posts
     .filter((p) => p.goalId === goal.id)
@@ -91,20 +100,43 @@ export default function GoalDetailPage() {
 
   const openLog = () => {
     if (!canLogMore) return;
-    if (!needsNumericLog) {
-      logProgress(goal.id);
-      return;
-    }
     setLogValue("");
+    setProofPhoto(null);
+    setPhotoError(null);
     setLogModalOpen(true);
   };
 
-  const submitLog = () => {
-    const num = Number(logValue);
-    if (logValue.trim() === "" || Number.isNaN(num)) return;
-    logProgress(goal.id, num);
+  const handlePhotoChange = async (file: File | undefined) => {
+    if (!file) return;
+    setPhotoError(null);
+    try {
+      const dataUrl = await resizeImageFile(file);
+      setProofPhoto(dataUrl);
+    } catch {
+      setPhotoError("Couldn't read that photo. Try another one.");
+    }
+  };
+
+  const submitLog = async () => {
+    if (needsNumericLog) {
+      const num = Number(logValue);
+      if (logValue.trim() === "" || Number.isNaN(num)) return;
+      setCheckingIn(true);
+      await logProgress(goal.id, num, "manual", proofPhoto ?? undefined);
+    } else {
+      setCheckingIn(true);
+      await logProgress(goal.id, undefined, "manual", proofPhoto ?? undefined);
+    }
+    setCheckingIn(false);
     setLogValue("");
+    setProofPhoto(null);
     setLogModalOpen(false);
+  };
+
+  const confirmCheckIn = async (postId: string) => {
+    setConfirming(postId);
+    await toggleReaction(postId, "\u{2705}");
+    setConfirming(null);
   };
 
   const submitJoin = () => {
@@ -138,6 +170,17 @@ export default function GoalDetailPage() {
         </div>
       </div>
 
+      {chainBroken && (
+        <div className="px-5">
+          <div className="flex items-center gap-3 rounded-2xl border border-rival-500/30 bg-rival-500/10 px-4 py-3.5">
+            <span className="text-lg">{"\u{26D3}\u{FE0F}"}</span>
+            <p className="flex-1 text-xs font-medium leading-snug text-chalk-100">
+              You missed a day — the chain broke. Check in today to start a new streak.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-3 px-5">
         <MiniStat label="Target" value={goal.target} sub={goal.unit} />
         <MiniStat label="Days left" value={String(daysLeft)} sub={`of ${goal.durationDays}`} />
@@ -147,6 +190,17 @@ export default function GoalDetailPage() {
           <MiniStat label="Streak" value={String(goal.streak)} sub="days" />
         )}
       </div>
+
+      {isGroupCommitment && !isEntryBased && (
+        <div className="px-5">
+          <div className="card-surface rounded-[var(--radius-card)] p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-chalk-500">Your group today</p>
+            <div className="mt-3">
+              <GroupRoster participants={goal.participants} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {isCompetitive && (
         <div className="px-5">
@@ -310,14 +364,16 @@ export default function GoalDetailPage() {
                 >
                   {!canLogMore ? (
                     <>
-                      <IconCheck className="h-4 w-4" /> Logged today
+                      <IconCheck className="h-4 w-4" /> Checked in today
                     </>
                   ) : isEntryBased ? (
                     "Log an entry"
                   ) : isCumulative && loggedToday ? (
                     "Add more today"
+                  ) : chainBroken ? (
+                    "Check in — restart the streak"
                   ) : (
-                    "Log today's progress"
+                    "Check in"
                   )}
                 </Button>
               )}
@@ -365,7 +421,7 @@ export default function GoalDetailPage() {
 
       <div className="flex flex-col gap-3 px-5">
         <h2 className="font-display text-lg tracking-wide text-chalk-100">
-          Participants <span className="text-chalk-500">({goal.participants.length})</span>
+          Your group <span className="text-chalk-500">({goal.participants.length})</span>
         </h2>
         <div className="flex flex-col gap-2">
           {sortedParticipants.map((p) => {
@@ -396,38 +452,100 @@ export default function GoalDetailPage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Updates</h2>
-        <div className="flex flex-col gap-3 px-5">
+        <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Check-ins</h2>
+        <div className="flex flex-col gap-2 px-5">
           {relatedPosts.length > 0 ? (
-            relatedPosts.map((post) => <FeedPostCard key={post.id} post={post} />)
+            relatedPosts.map((post) => {
+              const canConfirm = isGroupCommitment && post.userId !== "me";
+              const iConfirmed = post.reactions.some((r) => r.emoji === "\u{2705}" && r.userIds.includes("me"));
+              return (
+                <div key={post.id} className="flex flex-col gap-2">
+                  <FeedPostCard post={post} />
+                  {canConfirm && (
+                    <button
+                      onClick={() => confirmCheckIn(post.id)}
+                      disabled={confirming === post.id}
+                      className={cn(
+                        "self-start rounded-pill border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                        iConfirmed
+                          ? "border-volt-500/40 bg-volt-500/10 text-volt-400"
+                          : "border-white/10 bg-white/5 text-chalk-300"
+                      )}
+                    >
+                      {"\u{2705}"} {iConfirmed ? "Confirmed" : "Confirm this check-in"}
+                    </button>
+                  )}
+                </div>
+              );
+            })
           ) : (
-            <p className="text-sm text-chalk-500">No updates posted yet. Be the first to share progress.</p>
+            <p className="text-sm text-chalk-500">No check-ins yet. Be the first to show up.</p>
           )}
         </div>
       </div>
 
-      {logModalOpen && needsNumericLog && (
+      {logModalOpen && (
         <BottomSheet onClose={() => setLogModalOpen(false)}>
-          <p className="text-center font-display text-lg text-chalk-100">Log an entry</p>
+          <p className="text-center font-display text-lg text-chalk-100">
+            {needsNumericLog ? "Log an entry" : "Check in"}
+          </p>
           <p className="mt-1 text-center text-sm text-chalk-500">{goal.title}</p>
-          <label className="mt-5 flex flex-col gap-1.5">
+          {needsNumericLog && (
+            <label className="mt-5 flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">
+                {isCumulative ? `${goal.unit} logged` : isEntryBased ? `New ${goal.unit} attempt` : `Today's ${goal.unit}`}
+              </span>
+              <input
+                autoFocus
+                type="number"
+                inputMode="decimal"
+                value={logValue}
+                onChange={(e) => setLogValue(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submitLog()}
+                placeholder="0"
+                className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
+              />
+            </label>
+          )}
+          <div className="mt-5 flex flex-col gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-chalk-500">
-              {isCumulative ? `${goal.unit} logged` : isEntryBased ? `New ${goal.unit} attempt` : `Today's ${goal.unit}`}
+              Proof <span className="text-chalk-700">(optional)</span>
             </span>
-            <input
-              autoFocus
-              type="number"
-              inputMode="decimal"
-              value={logValue}
-              onChange={(e) => setLogValue(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitLog()}
-              placeholder="0"
-              className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
-            />
-          </label>
+            {proofPhoto ? (
+              <div className="relative overflow-hidden rounded-2xl">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={proofPhoto} alt="Check-in proof" className="aspect-video w-full object-cover" />
+                <button
+                  onClick={() => setProofPhoto(null)}
+                  aria-label="Remove photo"
+                  className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-ink-950/70 text-white"
+                >
+                  <IconX className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 bg-white/5 py-4 text-xs font-semibold text-chalk-500">
+                <IconCamera className="h-4 w-4" /> Attach a photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handlePhotoChange(e.target.files?.[0])}
+                />
+              </label>
+            )}
+            {photoError && <p className="text-xs text-rival-500">{photoError}</p>}
+            <p className="text-xs text-chalk-700">A photo makes it real for your group — but it&apos;s never required.</p>
+          </div>
           <div className="mt-5 flex flex-col gap-2.5">
-            <Button onClick={submitLog} disabled={logValue.trim() === ""} variant="volt" size="md" className="w-full">
-              Log entry
+            <Button
+              onClick={submitLog}
+              disabled={checkingIn || (needsNumericLog && logValue.trim() === "")}
+              variant="volt"
+              size="md"
+              className="w-full"
+            >
+              {checkingIn ? "Checking in…" : needsNumericLog ? "Log entry" : "Check in"}
             </Button>
             <Button onClick={() => setLogModalOpen(false)} variant="ghost" size="md" className="w-full">
               Cancel

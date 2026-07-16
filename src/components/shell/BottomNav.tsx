@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { IconFeed, IconHome, IconPlus, IconTrophy, IconUser } from "@/components/ui/Icons";
+import { IconHome, IconPlus, IconUser, IconUsers } from "@/components/ui/Icons";
 import { AscendMark } from "@/components/ui/AscendMark";
 
 const ITEMS = [
   { href: "/home", label: "Home", icon: IconHome },
-  { href: "/feed", label: "Feed", icon: IconFeed },
+  { href: "/feed", label: "Groups", icon: IconUsers },
   { href: "/create", label: "Create", icon: IconPlus, isCenter: true },
-  { href: "/compete", label: "Compete", icon: IconTrophy },
   { href: "/profile", label: "Profile", icon: IconUser },
 ];
 
