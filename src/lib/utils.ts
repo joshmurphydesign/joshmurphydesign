@@ -1,3 +1,5 @@
+import type { GoalCategory } from "./types";
+
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -48,14 +50,20 @@ export function pad2(n: number): string {
 const CATEGORY_LABELS: Record<string, string> = {
   strength: "Strength",
   running: "Running",
-  golf: "Golf",
-  basketball: "Basketball",
   steps: "Steps",
   mobility: "Mobility",
   nutrition: "Nutrition",
   recovery: "Recovery",
-  consistency: "Consistency",
   habits: "Habits",
+  sport: "Sport",
+  golf: "Golf",
+  basketball: "Basketball",
+  soccer: "Soccer",
+  tennis: "Tennis",
+  baseball: "Baseball",
+  swimming: "Swimming",
+  cycling: "Cycling",
+  boxing: "Boxing",
   custom: "Custom",
 };
 
@@ -66,20 +74,62 @@ export function categoryLabel(category: string): string {
 const CATEGORY_EMOJI: Record<string, string> = {
   strength: "\u{1F3CB}\u{FE0F}",
   running: "\u{1F3C3}",
-  golf: "\u{26F3}",
-  basketball: "\u{1F3C0}",
   steps: "\u{1F463}",
   mobility: "\u{1F9D8}",
   nutrition: "\u{1F957}",
   recovery: "\u{1F9CA}",
-  consistency: "\u{1F525}",
   habits: "\u{2705}",
+  sport: "\u{1F3C5}",
+  golf: "\u{26F3}",
+  basketball: "\u{1F3C0}",
+  soccer: "\u{26BD}",
+  tennis: "\u{1F3BE}",
+  baseball: "\u{26BE}",
+  swimming: "\u{1F3CA}",
+  cycling: "\u{1F6B4}",
+  boxing: "\u{1F94A}",
   custom: "\u{2728}",
 };
 
 export function categoryEmoji(category: string): string {
   return CATEGORY_EMOJI[category] ?? "\u{2728}";
 }
+
+/** The top-level tiles on the category-selection screen. Every one maps to a streak, a measurable goal, a repeatable action, or a check-in — "Sport" is the one gateway, leading to SPORT_OPTIONS. */
+export const TOP_LEVEL_CATEGORIES: GoalCategory[] = [
+  "strength",
+  "running",
+  "steps",
+  "mobility",
+  "nutrition",
+  "recovery",
+  "habits",
+  "sport",
+  "custom",
+];
+
+/** Specific sports offered after a user taps the "Sport" gateway tile. */
+export const SPORT_OPTIONS: GoalCategory[] = [
+  "basketball",
+  "golf",
+  "soccer",
+  "tennis",
+  "baseball",
+  "swimming",
+  "cycling",
+  "boxing",
+];
+
+/** Quick-pick focus tags used on signup/profile — excludes "Sport" (needs a sub-choice) and "Custom" (not a real interest). */
+export const FOCUS_CATEGORIES: GoalCategory[] = [
+  "strength",
+  "running",
+  "steps",
+  "mobility",
+  "nutrition",
+  "recovery",
+  "habits",
+];
 
 const MODE_LABELS: Record<string, string> = {
   goal: "Goal",

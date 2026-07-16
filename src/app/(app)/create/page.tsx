@@ -7,29 +7,23 @@ import { TopBar } from "@/components/shell/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
-import { cn, categoryEmoji, categoryLabel } from "@/lib/utils";
+import { cn, categoryEmoji, categoryLabel, TOP_LEVEL_CATEGORIES, SPORT_OPTIONS } from "@/lib/utils";
 import type { GoalCategory, GoalMode } from "@/lib/types";
-
-const CATEGORIES: GoalCategory[] = [
-  "strength",
-  "running",
-  "golf",
-  "basketball",
-  "steps",
-  "mobility",
-  "nutrition",
-  "recovery",
-  "consistency",
-  "habits",
-  "custom",
-];
 
 const SHAPES: { mode: GoalMode; label: string; desc: string }[] = [
   { mode: "goal", label: "Solo", desc: "Just you, protecting your own streak" },
   { mode: "challenge", label: "Group", desc: "Invite people — everyone's chain is on the line together" },
 ];
 
-const STEP_LABELS = ["Category", "Commitment", "Group", "Confirm"];
+type StepKey = "category" | "sport" | "commitment" | "group" | "confirm";
+
+const STEP_LABEL: Record<StepKey, string> = {
+  category: "Category",
+  sport: "Sport",
+  commitment: "Commitment",
+  group: "Group",
+  confirm: "Confirm",
+};
 
 const STAKE_PRESETS = [
   { key: "bragging", label: "🏆 Bragging rights" },
@@ -45,6 +39,7 @@ export default function CreateGoalPage() {
   const [step, setStep] = useState(0);
 
   const [category, setCategory] = useState<GoalCategory | null>(null);
+  const [isSportFlow, setIsSportFlow] = useState(false);
   const [mode, setMode] = useState<GoalMode>("goal");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -56,6 +51,18 @@ export default function CreateGoalPage() {
 
   const isGroup = mode === "challenge";
 
+  // "Sport" is a gateway tile, not a real category — picking it inserts a second
+  // picker of specific sports before the flow continues to the commitment step.
+  const steps: StepKey[] = isSportFlow
+    ? ["category", "sport", "commitment", "group", "confirm"]
+    : ["category", "commitment", "group", "confirm"];
+  const currentStep = steps[step];
+
+  const selectTopLevelCategory = (c: GoalCategory) => {
+    setCategory(c);
+    setIsSportFlow(c === "sport");
+  };
+
   const toggleInvitee = (id: string) => {
     setInviteeIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
@@ -63,7 +70,14 @@ export default function CreateGoalPage() {
   const finalStake =
     stakePreset === "custom" ? customStake.trim() : STAKE_PRESETS.find((p) => p.key === stakePreset)?.label ?? "";
 
-  const canAdvance = [!!category, title.trim().length >= 2, true, true][step];
+  const canAdvance =
+    currentStep === "category"
+      ? !!category
+      : currentStep === "sport"
+        ? !!category && SPORT_OPTIONS.includes(category)
+        : currentStep === "commitment"
+          ? title.trim().length >= 2
+          : true;
 
   const publish = async () => {
     if (!category) return;
@@ -97,17 +111,17 @@ export default function CreateGoalPage() {
       />
 
       <div className="flex items-center gap-2 px-5">
-        {STEP_LABELS.map((label, i) => (
-          <div key={label} className="flex flex-1 flex-col items-center gap-1.5">
+        {steps.map((key, i) => (
+          <div key={key} className="flex flex-1 flex-col items-center gap-1.5">
             <div className={cn("h-1.5 w-full rounded-pill", i <= step ? "bg-ascend-gradient" : "bg-white/8")} />
             <span className={cn("text-[10px] font-semibold", i === step ? "text-chalk-100" : "text-chalk-700")}>
-              {label}
+              {STEP_LABEL[key]}
             </span>
           </div>
         ))}
       </div>
 
-      {step === 0 && (
+      {currentStep === "category" && (
         <div className="flex flex-col gap-6 px-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-chalk-500">Who&apos;s on the line</p>
@@ -132,15 +146,17 @@ export default function CreateGoalPage() {
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-chalk-500">Category</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-chalk-500">What are you committing to?</p>
             <div className="mt-2.5 grid grid-cols-3 gap-2.5">
-              {CATEGORIES.map((c) => (
+              {TOP_LEVEL_CATEGORIES.map((c) => (
                 <button
                   key={c}
-                  onClick={() => setCategory(c)}
+                  onClick={() => selectTopLevelCategory(c)}
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3.5 transition-colors",
-                    category === c ? "border-volt-500/40 bg-volt-500/10" : "border-white/8 bg-white/5"
+                    (c === "sport" ? isSportFlow : category === c && !isSportFlow)
+                      ? "border-volt-500/40 bg-volt-500/10"
+                      : "border-white/8 bg-white/5"
                   )}
                 >
                   <span className="text-xl">{categoryEmoji(c)}</span>
@@ -152,9 +168,30 @@ export default function CreateGoalPage() {
         </div>
       )}
 
-      {step === 1 && (
+      {currentStep === "sport" && (
+        <div className="flex flex-col gap-3 px-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-chalk-500">Which sport?</p>
+          <div className="grid grid-cols-3 gap-2.5">
+            {SPORT_OPTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => setCategory(s)}
+                className={cn(
+                  "flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3.5 transition-colors",
+                  category === s ? "border-volt-500/40 bg-volt-500/10" : "border-white/8 bg-white/5"
+                )}
+              >
+                <span className="text-xl">{categoryEmoji(s)}</span>
+                <span className="text-[11px] font-semibold text-chalk-300">{categoryLabel(s)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {currentStep === "commitment" && (
         <div className="flex flex-col gap-4 px-5">
-          <Field label="What are you committing to?">
+          <Field label="Give it a name">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -257,7 +294,7 @@ export default function CreateGoalPage() {
         </div>
       )}
 
-      {step === 2 && (
+      {currentStep === "group" && (
         <div className="flex flex-col gap-3 px-5">
           {isGroup ? (
             <>
@@ -303,7 +340,7 @@ export default function CreateGoalPage() {
         </div>
       )}
 
-      {step === 3 && (
+      {currentStep === "confirm" && (
         <div className="flex flex-col gap-4 px-5">
           <div
             className="relative overflow-hidden rounded-[var(--radius-card)] p-6"
@@ -338,7 +375,7 @@ export default function CreateGoalPage() {
         </div>
       )}
 
-      {step < 3 && (
+      {currentStep !== "confirm" && (
         <div className="px-5">
           <Button onClick={() => setStep((s) => s + 1)} disabled={!canAdvance} variant="primary" size="lg" className="w-full">
             Continue

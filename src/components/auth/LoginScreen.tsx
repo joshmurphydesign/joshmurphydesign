@@ -6,19 +6,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { AscendMark } from "@/components/ui/AscendMark";
 import { Button } from "@/components/ui/Button";
-import { cn, categoryEmoji, categoryLabel } from "@/lib/utils";
+import { cn, categoryEmoji, categoryLabel, FOCUS_CATEGORIES } from "@/lib/utils";
 import type { GoalCategory } from "@/lib/types";
-
-const FOCUS_OPTIONS: GoalCategory[] = [
-  "strength",
-  "running",
-  "golf",
-  "basketball",
-  "steps",
-  "mobility",
-  "nutrition",
-  "recovery",
-];
 
 export function LoginScreen() {
   const { login, signup } = useAuth();
@@ -53,7 +42,7 @@ export function LoginScreen() {
           name: name.trim(),
           email: email.trim(),
           password,
-          focus: focus.length ? focus : ["consistency"],
+          focus: focus.length ? focus : ["habits"],
         });
       } else {
         await login(email.trim(), password);
@@ -186,7 +175,7 @@ export function LoginScreen() {
               Athletic focus <span className="text-chalk-700">(pick a few)</span>
             </span>
             <div className="flex flex-wrap gap-2">
-              {FOCUS_OPTIONS.map((cat) => {
+              {FOCUS_CATEGORIES.map((cat) => {
                 const active = focus.includes(cat);
                 return (
                   <button

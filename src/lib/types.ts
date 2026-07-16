@@ -1,14 +1,26 @@
+/**
+ * "sport" is a gateway value only — selecting the "Sport" tile leads to a second
+ * picker of specific sports (golf, basketball, soccer, ...) and the goal is saved
+ * under that specific sport, not under "sport" itself. Every other category maps
+ * directly to a streak, a measurable goal, a repeatable action, or a check-in.
+ */
 export type GoalCategory =
   | "strength"
   | "running"
-  | "golf"
-  | "basketball"
   | "steps"
   | "mobility"
   | "nutrition"
   | "recovery"
-  | "consistency"
   | "habits"
+  | "sport"
+  | "golf"
+  | "basketball"
+  | "soccer"
+  | "tennis"
+  | "baseball"
+  | "swimming"
+  | "cycling"
+  | "boxing"
   | "custom";
 
 export type GoalMode = "goal" | "challenge" | "duel" | "quest";

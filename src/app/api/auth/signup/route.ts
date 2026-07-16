@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   }
   const { name, password } = parsed.data;
   const email = parsed.data.email.toLowerCase();
-  const focus = (parsed.data.focus?.length ? parsed.data.focus : ["consistency"]) as GoalCategory[];
+  const focus = (parsed.data.focus?.length ? parsed.data.focus : ["habits"]) as GoalCategory[];
 
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) {

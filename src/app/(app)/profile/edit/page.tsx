@@ -6,23 +6,9 @@ import { useAuth } from "@/lib/auth-context";
 import { TopBar } from "@/components/shell/TopBar";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
-import { cn, categoryEmoji, categoryLabel } from "@/lib/utils";
+import { cn, categoryEmoji, categoryLabel, FOCUS_CATEGORIES } from "@/lib/utils";
 import { initials } from "@/lib/profile";
 import type { GoalCategory } from "@/lib/types";
-
-const CATEGORIES: GoalCategory[] = [
-  "strength",
-  "running",
-  "golf",
-  "basketball",
-  "steps",
-  "mobility",
-  "nutrition",
-  "recovery",
-  "consistency",
-  "habits",
-  "custom",
-];
 
 const AVATAR_GRADIENTS = [
   "linear-gradient(135deg,#1379c9,#35c2f2)",
@@ -101,7 +87,7 @@ export default function EditProfilePage() {
             Athletic focus <span className="text-chalk-700">(up to 5)</span>
           </span>
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => {
+            {FOCUS_CATEGORIES.map((c) => {
               const active = focus.includes(c);
               return (
                 <button
