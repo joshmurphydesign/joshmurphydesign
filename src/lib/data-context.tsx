@@ -59,6 +59,7 @@ interface DataContextValue {
   activity: ActivityHistoryItem[];
   messages: Message[];
   following: string[];
+  followerIds: string[];
   health: HealthConnection | null;
   otherUsers: User[];
   isHydrated: boolean;
@@ -82,7 +83,7 @@ interface DataContextValue {
     startingValue?: number;
   }) => Promise<Goal>;
   markNotificationsRead: () => Promise<void>;
-  createPost: (params: { body: string; imageUrl?: string; goalId?: string }) => Promise<void>;
+  createPost: (params: { body: string; imageUrl?: string; goalId?: string; isChallengeInvite?: boolean }) => Promise<void>;
   logProgress: (goalId: string, value?: number, source?: "manual" | "health", imageUrl?: string) => Promise<void>;
   spendStreakFreeze: (goalId: string) => Promise<void>;
   settleGoal: (goalId: string) => Promise<void>;
@@ -112,6 +113,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [activity, setActivity] = useState<ActivityHistoryItem[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [following, setFollowing] = useState<string[]>([]);
+  const [followerIds, setFollowerIds] = useState<string[]>([]);
   const [threadReads, setThreadReads] = useState<Record<string, string>>({});
   const [otherUsers, setOtherUsers] = useState<User[]>([]);
   const [serverHydrated, setServerHydrated] = useState(false);
@@ -152,6 +154,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setActivity([]);
       setMessages([]);
       setFollowing([]);
+      setFollowerIds([]);
       setThreadReads({});
       setOtherUsers([]);
       setServerHydrated(false);
@@ -171,6 +174,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setActivity(((state.activity as ActivityHistoryItem[]) ?? []).map((a) => normalizeActivity(a, userId)));
         setMessages(((state.messages as Message[]) ?? []).map((m) => normalizeMessage(m, userId)));
         setFollowing((state.following as string[]) ?? []);
+        setFollowerIds((state.followerIds as string[]) ?? []);
         setThreadReads((state.threadReads as Record<string, string>) ?? {});
         setOtherUsers(usersRes.users ?? []);
       })
@@ -288,7 +292,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (data.notifications && userId) setNotifications(data.notifications.map((n) => normalizeNotification(n, userId)));
   }, [userId]);
 
-  const createPost = useCallback(async (params: { body: string; imageUrl?: string; goalId?: string }) => {
+  const createPost = useCallback(async (params: { body: string; imageUrl?: string; goalId?: string; isChallengeInvite?: boolean }) => {
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -500,6 +504,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       activity,
       messages,
       following,
+      followerIds,
       health,
       otherUsers,
       isHydrated: serverHydrated && localHydrated,
@@ -531,6 +536,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       activity,
       messages,
       following,
+      followerIds,
       health,
       otherUsers,
       serverHydrated,

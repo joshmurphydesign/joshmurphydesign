@@ -130,7 +130,8 @@ export type PostType =
   | "streak"
   | "encouragement"
   | "competition-result"
-  | "powerplay";
+  | "powerplay"
+  | "challenge-invite";
 
 export interface Post {
   id: string;

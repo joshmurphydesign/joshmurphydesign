@@ -28,10 +28,12 @@ function ComposerScreen() {
   const [goalId, setGoalId] = useState<string | null>(presetGoalId);
   const [imageError, setImageError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
+  const [postAsInvite, setPostAsInvite] = useState(false);
 
   const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === "me"));
   const attachedGoal = goalId ? goals.find((g) => g.id === goalId) : undefined;
   const me = attachedGoal?.participants.find((p) => p.userId === "me");
+  const isOwner = !!me?.isOwner;
 
   // A highlight always ties back to a commitment — that's what keeps the feed
   // high-signal instead of turning into general-purpose posting.
@@ -52,9 +54,10 @@ function ComposerScreen() {
     if (!canPost) return;
     setPosting(true);
     createPost({
-      body: caption.trim() || "Shared a photo update.",
+      body: caption.trim() || (postAsInvite ? "Come join me on this one." : "Shared a photo update."),
       imageUrl: imageUrl ?? undefined,
       goalId: goalId ?? undefined,
+      isChallengeInvite: isOwner && postAsInvite,
     });
     router.replace("/pulse");
   };
@@ -62,7 +65,7 @@ function ComposerScreen() {
   return (
     <div className="flex flex-col gap-5 pb-4">
       <TopBar
-        title="Share a Highlight"
+        title={postAsInvite ? "Post a Challenge" : "Share a Highlight"}
         onBack
         right={
           <Button onClick={submit} disabled={!canPost} variant="volt" size="sm">
@@ -117,7 +120,7 @@ function ComposerScreen() {
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
-          placeholder="What's the highlight?"
+          placeholder={postAsInvite ? "Why should people join you?" : "What's the highlight?"}
           rows={3}
           className="w-full resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
         />
@@ -161,6 +164,31 @@ function ComposerScreen() {
             </div>
             <span className="text-2xl">{categoryEmoji(attachedGoal.category)}</span>
           </div>
+        )}
+        {isOwner && (
+          <button
+            type="button"
+            onClick={() => setPostAsInvite((v) => !v)}
+            className={cn(
+              "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors",
+              postAsInvite ? "border-ascend-blue/40 bg-ascend-blue/10" : "border-white/8 bg-white/5"
+            )}
+          >
+            <div
+              className={cn(
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+                postAsInvite ? "border-ascend-blue bg-ascend-blue text-white" : "border-white/20"
+              )}
+            >
+              {postAsInvite && "✓"}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-chalk-100">{"\u{1F4E3}"} Post as an open challenge</p>
+              <p className="text-xs text-chalk-500">
+                People who follow you (or you follow) can see this in Pulse and join directly.
+              </p>
+            </div>
+          </button>
         )}
       </div>
     </div>

@@ -8,6 +8,7 @@ import { useData } from "@/lib/data-context";
 import { categoryEmoji, cn, timeAgo } from "@/lib/utils";
 import { isHighlight } from "@/lib/feed-ranking";
 import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { ReactionBar } from "./ReactionBar";
 
@@ -20,6 +21,7 @@ const TYPE_LABEL: Record<Post["type"], string> = {
   encouragement: "Encouragement",
   "competition-result": "Competition",
   powerplay: "Power Play",
+  "challenge-invite": "Open Invite",
 };
 
 const TYPE_TONE: Record<Post["type"], "volt" | "blue" | "rival" | "gold" | "neutral"> = {
@@ -29,14 +31,16 @@ const TYPE_TONE: Record<Post["type"], "volt" | "blue" | "rival" | "gold" | "neut
   encouragement: "neutral",
   "competition-result": "rival",
   powerplay: "rival",
+  "challenge-invite": "blue",
 };
 
 export function FeedPostCard({ post }: { post: Post }) {
   const author = useResolvedUser(post.userId);
-  const { goals, toggleReaction, addComment } = useData();
+  const { goals, toggleReaction, addComment, joinGoal } = useData();
   const [showComments, setShowComments] = useState(false);
   const [draft, setDraft] = useState("");
   const [showHeart, setShowHeart] = useState(false);
+  const [joining, setJoining] = useState(false);
   const lastTapRef = useRef(0);
 
   if (!author) return null;
@@ -44,6 +48,15 @@ export function FeedPostCard({ post }: { post: Post }) {
   const linkedGoal = post.goalId ? goals.find((g) => g.id === post.goalId) : undefined;
   const iCheered = post.reactions.some((r) => r.emoji === CHEER_EMOJI && r.userIds.includes("me"));
   const highlight = isHighlight(post);
+  const isInvite = post.type === "challenge-invite";
+  const alreadyIn = !linkedGoal || linkedGoal.participants.some((p) => p.userId === "me");
+
+  const handleJoin = async () => {
+    if (!linkedGoal) return;
+    setJoining(true);
+    await joinGoal(linkedGoal.id);
+    setJoining(false);
+  };
 
   const submitComment = () => {
     const text = draft.trim();
@@ -124,7 +137,22 @@ export function FeedPostCard({ post }: { post: Post }) {
           </div>
         )}
 
-        {!post.imageUrl && linkedGoal && (
+        {isInvite && linkedGoal && (
+          <div className="mt-3 flex items-center gap-2">
+            {alreadyIn ? (
+              <Pill tone="volt">{"\u{2705}"} You&apos;re in</Pill>
+            ) : (
+              <Button onClick={handleJoin} disabled={joining} variant="volt" size="sm">
+                {joining ? "Joining…" : `Join · ${linkedGoal.participants.length} in`}
+              </Button>
+            )}
+            <Link href={`/goal/${linkedGoal.id}`} className="text-xs font-semibold text-chalk-500 underline decoration-white/20 underline-offset-2">
+              View details →
+            </Link>
+          </div>
+        )}
+
+        {!isInvite && !post.imageUrl && linkedGoal && (
           <Link
             href={`/goal/${linkedGoal.id}`}
             className="mt-3 block text-xs font-semibold text-chalk-500 underline decoration-white/20 underline-offset-2"

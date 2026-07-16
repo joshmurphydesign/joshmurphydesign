@@ -9,17 +9,26 @@ import { IconCamera } from "@/components/ui/Icons";
 import { byImportance } from "@/lib/feed-ranking";
 
 export default function PulsePage() {
-  const { goals, posts } = useData();
+  const { goals, posts, following, followerIds } = useData();
 
   const myGoals = useMemo(() => goals.filter((g) => g.participants.some((p) => p.userId === "me")), [goals]);
   const myGoalIds = useMemo(() => new Set(myGoals.map((g) => g.id)), [myGoals]);
+  // People you follow or who follow you — the only audience an open challenge
+  // invite reaches beyond the group itself, so Pulse stays high-signal rather
+  // than a public discovery feed.
+  const connections = useMemo(() => new Set([...following, ...followerIds]), [following, followerIds]);
   // The app-wide highlight reel — every post here ties back to a commitment,
   // and importance (wins, streak milestones) is blended with recency so the
-  // moments that matter don't get buried under routine check-ins.
-  const highlights = useMemo(
-    () => [...posts].filter((p) => p.goalId && myGoalIds.has(p.goalId)).sort(byImportance),
-    [posts, myGoalIds]
-  );
+  // moments that matter don't get buried under routine check-ins. Open
+  // challenge invites from connections are the one exception to "your own
+  // goals only" — that's the whole point of posting one.
+  const highlights = useMemo(() => {
+    const own = posts.filter((p) => p.goalId && myGoalIds.has(p.goalId));
+    const invites = posts.filter(
+      (p) => p.type === "challenge-invite" && connections.has(p.userId) && !(p.goalId && myGoalIds.has(p.goalId))
+    );
+    return [...own, ...invites].sort(byImportance);
+  }, [posts, myGoalIds, connections]);
 
   return (
     <div className="flex flex-col gap-6">

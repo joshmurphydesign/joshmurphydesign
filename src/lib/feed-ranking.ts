@@ -7,6 +7,7 @@ const TYPE_WEIGHT: Record<PostType, number> = {
   win: 5,
   "competition-result": 5,
   streak: 4,
+  "challenge-invite": 3,
   progress: 2,
   powerplay: 2,
   encouragement: 1,
