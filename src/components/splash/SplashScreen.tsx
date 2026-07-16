@@ -3,43 +3,61 @@
 import { motion } from "framer-motion";
 import { AscendMark } from "@/components/ui/AscendMark";
 
-export function SplashScreen() {
+export function SplashScreen({ durationMs = 1400 }: { durationMs?: number }) {
+  const durationS = durationMs / 1000;
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-ink-950"
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.5, ease: "easeInOut" } }}
+      exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeInOut" } }}
     >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-70"
+      {/* Ambient field — a slow, subtle breathe keeps the screen alive if hydration runs long, without looping distractingly */}
+      <motion.div
+        className="pointer-events-none absolute inset-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 0.85, 0.7, 0.85] }}
+        transition={{ opacity: { times: [0, 0.3, 0.65, 1], duration: 5, ease: "easeInOut", repeat: Infinity } }}
         style={{
           background:
-            "radial-gradient(60% 45% at 50% 30%, rgba(19,121,201,0.35) 0%, rgba(0,0,0,0) 70%), radial-gradient(50% 40% at 70% 75%, rgba(53,194,242,0.22) 0%, rgba(0,0,0,0) 70%)",
+            "radial-gradient(55% 42% at 50% 30%, rgba(46,123,255,0.34) 0%, rgba(0,0,0,0) 70%), radial-gradient(45% 36% at 74% 76%, rgba(83,214,255,0.16) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
+      <div className="noise-overlay pointer-events-none absolute inset-0" />
 
-      <motion.div
-        initial={{ scale: 0.6, opacity: 0, rotate: -8 }}
-        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="relative flex h-24 w-24 items-center justify-center rounded-3xl card-surface-raised"
-      >
-        <AscendMark size={52} />
-      </motion.div>
+      {/* Mark stands free — a soft bloom behind it instead of boxing it in a card */}
+      <div className="relative flex h-40 w-40 items-center justify-center">
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          style={{ background: "radial-gradient(closest-side, rgba(46,123,255,0.38), rgba(46,123,255,0) 72%)" }}
+        />
+        <motion.div
+          initial={{ scale: 0.55, opacity: 0, y: 8 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <AscendMark size={108} />
+        </motion.div>
+      </div>
 
-      <motion.h1
-        initial={{ y: 14, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.35, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="relative mt-6 font-display text-3xl tracking-wide text-ascend-gradient"
-      >
-        ASCEND
-      </motion.h1>
+      <div className="relative mt-6 overflow-hidden">
+        <motion.h1
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.32, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="font-display text-3xl tracking-wide text-ascend-gradient"
+        >
+          ASCEND
+        </motion.h1>
+      </div>
 
       <motion.p
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.55, duration: 0.5 }}
+        transition={{ delay: 0.5, duration: 0.45 }}
         className="relative mt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-chalk-500"
       >
         <span>Show Up.</span>
@@ -49,12 +67,15 @@ export function SplashScreen() {
         <span>Rise Together.</span>
       </motion.p>
 
-      <motion.div
-        initial={{ scaleX: 0, opacity: 0 }}
-        animate={{ scaleX: 1, opacity: 1 }}
-        transition={{ delay: 0.75, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative mt-8 h-1 w-28 origin-left rounded-pill bg-ascend-gradient"
-      />
+      {/* A real progress fill timed to the splash's minimum hold — motion with a job, not decoration */}
+      <div className="relative mt-9 h-[3px] w-32 overflow-hidden rounded-full bg-white/8">
+        <motion.div
+          className="h-full w-full origin-left rounded-full bg-ascend-gradient"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.15, duration: Math.max(0.4, durationS - 0.15), ease: "easeInOut" }}
+        />
+      </div>
     </motion.div>
   );
 }

@@ -25,7 +25,7 @@ export default function EntryPage() {
 
   return (
     <AnimatePresence>
-      <SplashScreen key="splash" />
+      <SplashScreen key="splash" durationMs={MIN_SPLASH_MS} />
     </AnimatePresence>
   );
 }
