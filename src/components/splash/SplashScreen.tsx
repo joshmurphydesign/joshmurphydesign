@@ -40,9 +40,13 @@ export function SplashScreen() {
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.55, duration: 0.5 }}
-        className="relative mt-2 text-xs font-semibold uppercase tracking-[0.3em] text-chalk-500"
+        className="relative mt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-chalk-500"
       >
-        Show Up. Stand Out.
+        <span>Show Up.</span>
+        <span className="text-chalk-700">|</span>
+        <span className="text-ascend-sky">Stand Out.</span>
+        <span className="text-chalk-700">|</span>
+        <span>Rise Together.</span>
       </motion.p>
 
       <motion.div

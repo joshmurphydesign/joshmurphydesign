@@ -86,7 +86,13 @@ export function LoginScreen() {
         </div>
         <div>
           <p className="font-display text-lg leading-none tracking-wide">ASCEND</p>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-chalk-500">Show Up. Stand Out.</p>
+          <p className="mt-1 flex items-center gap-1 whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.2em] text-chalk-500">
+            <span>Show Up.</span>
+            <span className="text-chalk-700">|</span>
+            <span className="text-ascend-sky">Stand Out.</span>
+            <span className="text-chalk-700">|</span>
+            <span>Rise Together.</span>
+          </p>
         </div>
       </motion.div>
 

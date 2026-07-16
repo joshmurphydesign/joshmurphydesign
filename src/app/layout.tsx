@@ -17,7 +17,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Ascend — Show Up. Stand Out.",
+  title: "Ascend — Show Up. Stand Out. Rise Together.",
   description:
     "Ascend is a social accountability platform for athletes. Set goals, rally your people, compete with purpose, and ascend together.",
 };
