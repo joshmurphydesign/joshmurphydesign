@@ -80,6 +80,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         ? goal.streak + 1
         : 1;
 
+  const nextBestStreak = Math.max(goal.bestStreak, nextStreak);
   const milestone = !isEntryBased && !alreadyLoggedToday && nextStreak > 0 && nextStreak % 7 === 0;
   const hitTarget = nextProgress >= 100 && participant.progress < 100;
   const isHealthSync = source === "health";
@@ -127,7 +128,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }),
     db.goal.update({
       where: { id: goal.id },
-      data: { streak: nextStreak, progress: aggregateProgress },
+      data: { streak: nextStreak, bestStreak: nextBestStreak, progress: aggregateProgress },
       include: { participants: true },
     }),
     db.activityHistoryItem.create({

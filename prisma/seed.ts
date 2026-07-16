@@ -184,6 +184,8 @@ interface SeedGoal {
   status: string;
   progress: number;
   streak: number;
+  /** All-time longest streak — defaults to `streak` when unset. */
+  bestStreak?: number;
   coverGradient: string;
   metricType: string;
   metricTargetValue: number;
@@ -208,6 +210,7 @@ const GOALS: SeedGoal[] = [
     status: "active",
     progress: 62,
     streak: 12,
+    bestStreak: 33,
     coverGradient: "linear-gradient(135deg,#0b3f7a,#35c2f2)",
     metricType: "binary",
     metricTargetValue: 30,
@@ -232,6 +235,7 @@ const GOALS: SeedGoal[] = [
     status: "active",
     progress: 38,
     streak: 6,
+    bestStreak: 14,
     coverGradient: "linear-gradient(135deg,#1379c9,#3dd6ff)",
     metricType: "binary",
     metricTargetValue: 84,
@@ -523,6 +527,33 @@ const POSTS: SeedPost[] = [
     reactions: [{ emoji: "\u{1F4A5}", userIds: ["u-dre", "me"] }],
     comments: [],
   },
+  // "me"'s own check-in history — every manual log creates a post (see api/goals/[id]/log),
+  // so these double as the ledger the Insights completion-rate/consistency strip reads from.
+  {
+    id: "p-9",
+    userId: "me",
+    goalId: "g-pushup-streak",
+    type: "progress",
+    headline: "Checked in on 100 Push-Ups Daily",
+    body: "Day 12. The chain holds.",
+    imageUrl: coverArt("#0b3f7a", "#35c2f2", "\u{1F4AA}"),
+    createdAt: hoursAgo(14),
+    reactions: [],
+    comments: [],
+  },
+  { id: "p-10", userId: "me", goalId: "g-pushup-streak", type: "progress", headline: "Checked in on 100 Push-Ups Daily", body: "Day 11. The chain holds.", createdAt: daysAgo(1), reactions: [], comments: [] },
+  { id: "p-11", userId: "me", goalId: "g-pushup-streak", type: "progress", headline: "Checked in on 100 Push-Ups Daily", body: "Day 10. The chain holds.", createdAt: daysAgo(2), reactions: [], comments: [] },
+  { id: "p-12", userId: "me", goalId: "g-pushup-streak", type: "progress", headline: "Checked in on 100 Push-Ups Daily", body: "Day 9. The chain holds.", createdAt: daysAgo(3), reactions: [], comments: [] },
+  { id: "p-13", userId: "me", goalId: "g-pushup-streak", type: "progress", headline: "Checked in on 100 Push-Ups Daily", body: "Day 8. The chain holds.", createdAt: daysAgo(4), reactions: [], comments: [] },
+  { id: "p-14", userId: "me", goalId: "g-pushup-streak", type: "progress", headline: "Checked in on 100 Push-Ups Daily", body: "Day 6. The chain holds.", createdAt: daysAgo(6), reactions: [], comments: [] },
+  { id: "p-15", userId: "me", goalId: "g-pushup-streak", type: "progress", headline: "Checked in on 100 Push-Ups Daily", body: "Day 5. The chain holds.", createdAt: daysAgo(7), reactions: [], comments: [] },
+  { id: "p-16", userId: "me", goalId: "g-pushup-streak", type: "progress", headline: "Checked in on 100 Push-Ups Daily", body: "Day 4. The chain holds.", createdAt: daysAgo(8), reactions: [], comments: [] },
+  { id: "p-17", userId: "me", goalId: "g-half-marathon", type: "progress", headline: "Checked in on Half Marathon Build", body: "Day 6. The chain holds.", createdAt: daysAgo(1), reactions: [], comments: [] },
+  { id: "p-18", userId: "me", goalId: "g-half-marathon", type: "progress", headline: "Checked in on Half Marathon Build", body: "Day 5. The chain holds.", createdAt: daysAgo(2), reactions: [], comments: [] },
+  { id: "p-19", userId: "me", goalId: "g-half-marathon", type: "progress", headline: "Checked in on Half Marathon Build", body: "Day 4. The chain holds.", createdAt: daysAgo(3), reactions: [], comments: [] },
+  { id: "p-20", userId: "me", goalId: "g-half-marathon", type: "progress", headline: "Checked in on Half Marathon Build", body: "Day 3. The chain holds.", createdAt: daysAgo(4), reactions: [], comments: [] },
+  { id: "p-21", userId: "me", goalId: "g-half-marathon", type: "progress", headline: "Checked in on Half Marathon Build", body: "Day 2. The chain holds.", createdAt: daysAgo(5), reactions: [], comments: [] },
+  { id: "p-22", userId: "me", goalId: "g-half-marathon", type: "progress", headline: "Checked in on Half Marathon Build", body: "Day 1. The chain holds.", createdAt: daysAgo(6), reactions: [], comments: [] },
 ];
 
 const NOTIFICATIONS = [
@@ -627,6 +658,7 @@ async function main() {
         status: g.status,
         progress: g.progress,
         streak: g.streak,
+        bestStreak: g.bestStreak ?? g.streak,
         coverGradient: g.coverGradient,
         metricType: g.metricType,
         metricTargetValue: g.metricTargetValue,

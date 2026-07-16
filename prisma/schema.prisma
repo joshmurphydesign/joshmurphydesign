@@ -87,6 +87,8 @@ model Goal {
   status       String
   progress     Int       @default(0)
   streak       Int       @default(0)
+  /** All-time longest streak this goal has reached — unlike `streak`, this never resets on a miss. Powers milestone badges and the "longest streak" insight. */
+  bestStreak   Int       @default(0)
   coverGradient String
   metricType   String
   metricTargetValue Float

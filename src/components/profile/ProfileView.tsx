@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { useData } from "@/lib/data-context";
 import { useUserMap } from "@/lib/people";
@@ -9,38 +8,36 @@ import { Pill } from "@/components/ui/Pill";
 import { Button } from "@/components/ui/Button";
 import { IconMessage } from "@/components/ui/Icons";
 import { GoalCard } from "@/components/goal/GoalCard";
+import { ProfileInsights } from "@/components/profile/ProfileInsights";
+import { earnedBadges, type Badge } from "@/lib/badges";
 import { categoryEmoji, categoryLabel, cn, timeAgo } from "@/lib/utils";
 import type { User } from "@/lib/types";
 
 export function ProfileView({ person }: { person: User & { email?: string } }) {
-  const { goals, competitions, powerPlays, activity, following, toggleFollow } = useData();
+  const { goals, posts, activity, following, toggleFollow } = useData();
   const userMap = useUserMap();
   const isMe = person.id === "me";
   const isFollowing = following.includes(person.id);
 
   const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === person.id));
   const completedGoals = myGoals.filter((g) => g.status === "completed" || g.progress >= 100);
-  // Goal.streak only tracks "me"'s own logging pattern, so a live best-streak
-  // can only be derived for the signed-in user — other profiles fall back to
-  // their static seed value.
+  const personPosts = posts.filter((p) => p.userId === person.id);
+  // Goal.bestStreak/streak reflect whoever most recently logged a shared group goal,
+  // not a true per-participant figure — reliable for the signed-in user, but other
+  // profiles fall back to their static seed streak instead of a possibly-wrong number.
   const bestActiveStreak = isMe ? myGoals.reduce((max, g) => Math.max(max, g.streak), 0) : person.streak;
 
-  const topFinishes = useMemo(() => {
-    const all = [
-      ...competitions.map((c) => ({ label: c.title, entries: c.leaderboard })),
-      ...powerPlays.map((p) => ({ label: p.title, entries: p.leaderboard })),
-    ];
-    return all
-      .map((x) => ({ label: x.label, entry: x.entries.find((e) => e.userId === person.id) }))
-      .filter((x): x is { label: string; entry: NonNullable<typeof x.entry> } => !!x.entry && x.entry.rank <= 3)
-      .sort((a, b) => a.entry.rank - b.entry.rank);
-  }, [competitions, powerPlays, person.id]);
-
-  const achievements = [
-    bestActiveStreak >= 30 && { icon: "\u{1F525}", label: `${bestActiveStreak}-day streak` },
-    completedGoals.length > 0 && { icon: "\u{1F3C1}", label: `${completedGoals.length} goal${completedGoals.length === 1 ? "" : "s"} completed` },
-    ...topFinishes.slice(0, 3).map((f) => ({ icon: f.entry.rank === 1 ? "\u{1F947}" : f.entry.rank === 2 ? "\u{1F948}" : "\u{1F949}", label: f.label })),
-  ].filter(Boolean) as { icon: string; label: string }[];
+  const achievements: Badge[] = isMe
+    ? earnedBadges(myGoals, personPosts)
+    : ([
+        bestActiveStreak >= 30 && { id: "streak", icon: "\u{1F525}", label: `${bestActiveStreak}-day streak`, sub: undefined },
+        completedGoals.length > 0 && {
+          id: "completed",
+          icon: "\u{1F3C1}",
+          label: `${completedGoals.length} goal${completedGoals.length === 1 ? "" : "s"} completed`,
+          sub: undefined,
+        },
+      ].filter(Boolean) as Badge[]);
 
   const personActivity = activity.filter((a) => a.userId === person.id);
 
@@ -99,18 +96,21 @@ export function ProfileView({ person }: { person: User & { email?: string } }) {
         <StatBlock value={isMe ? following.length : person.following} label="Following" />
       </div>
 
+      {isMe && <ProfileInsights goals={myGoals} posts={personPosts} />}
+
       {achievements.length > 0 && (
         <section className="flex flex-col gap-2.5">
-          <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Achievements</h2>
+          <h2 className="px-5 font-display text-lg tracking-wide text-chalk-100">Milestones</h2>
           <div className="flex gap-2.5 overflow-x-auto px-5 pb-1">
-            {achievements.map((a, i) => (
+            {achievements.map((a) => (
               <div
-                key={i}
+                key={a.id}
                 className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl card-surface px-4 py-3.5 text-center"
                 style={{ minWidth: 108 }}
               >
                 <span className="text-2xl">{a.icon}</span>
                 <span className="text-[11px] font-semibold leading-tight text-chalk-300">{a.label}</span>
+                {a.sub && <span className="text-[10px] text-chalk-700">{a.sub}</span>}
               </div>
             ))}
           </div>

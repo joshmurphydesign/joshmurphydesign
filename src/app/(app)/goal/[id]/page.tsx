@@ -10,6 +10,7 @@ import { isStepsGoal, metricIsCumulative, metricIsEntryBased, metricNeedsBaselin
 import { computeStakePayout, PAYMENT_PROVIDERS, PAYMENT_PROVIDER_META, paymentLink } from "@/lib/payments";
 import { useUserMap } from "@/lib/people";
 import { checkInStatus } from "@/lib/streak-status";
+import { shareText } from "@/lib/share";
 import { TopBar } from "@/components/shell/TopBar";
 import { Pill } from "@/components/ui/Pill";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -18,7 +19,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { GroupRoster } from "@/components/goal/GroupRoster";
-import { IconCamera, IconCheck, IconChevronRight, IconX } from "@/components/ui/Icons";
+import { IconCamera, IconCheck, IconChevronRight, IconShare, IconUserPlus, IconX } from "@/components/ui/Icons";
 import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { categoryEmoji, cn, daysUntil, isToday, modeLabel, resizeImageFile, timeAgo } from "@/lib/utils";
 
@@ -36,7 +37,7 @@ const MODE_TONE: Record<string, "blue" | "rival" | "volt" | "gold"> = {
 export default function GoalDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { goals, posts, health, joinGoal, logProgress, spendStreakFreeze, settleGoal, markStakePaid, toggleReaction } = useData();
+  const { goals, posts, health, otherUsers, joinGoal, inviteToGoal, logProgress, spendStreakFreeze, settleGoal, markStakePaid, toggleReaction } = useData();
   const userMap = useUserMap();
 
   const goal = goals.find((g) => g.id === params.id);
@@ -48,6 +49,10 @@ export default function GoalDetailPage() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [checkingIn, setCheckingIn] = useState(false);
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [inviteSheetOpen, setInviteSheetOpen] = useState(false);
+  const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
+  const [inviting, setInviting] = useState(false);
+  const [shareState, setShareState] = useState<"idle" | "copied">("idle");
 
   if (!goal) {
     return (
@@ -67,6 +72,7 @@ export default function GoalDetailPage() {
   const chainBroken = !isEntryBased && iAmIn && myStatus === "missed";
   const streakAtRisk = !isEntryBased && iAmIn && myStatus === "pending" && goal.streak > 0;
   const isGroupCommitment = goal.participants.length > 1;
+  const notInvited = otherUsers.filter((u) => !goal.participants.some((p) => p.userId === u.id));
   const sortedParticipants = [...goal.participants].sort((a, b) => b.progress - a.progress);
   const relatedPosts = posts
     .filter((p) => p.goalId === goal.id)
@@ -139,6 +145,32 @@ export default function GoalDetailPage() {
     setConfirming(null);
   };
 
+  const toggleInvitee = (id: string) => {
+    setSelectedInviteeIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+
+  const submitInvite = async () => {
+    if (selectedInviteeIds.length === 0) return;
+    setInviting(true);
+    await inviteToGoal(goal.id, selectedInviteeIds);
+    setInviting(false);
+    setSelectedInviteeIds([]);
+    setInviteSheetOpen(false);
+  };
+
+  const share = async () => {
+    const result = await shareText(
+      goal.title,
+      goal.streak > 0
+        ? `I'm on a ${goal.streak}-day streak on "${goal.title}" — join me on Ascend.`
+        : `I'm committing to "${goal.title}" on Ascend — join me.`
+    );
+    if (result === "copied") {
+      setShareState("copied");
+      setTimeout(() => setShareState("idle"), 1800);
+    }
+  };
+
   const submitJoin = () => {
     if (!needsBaseline) {
       joinGoal(goal.id);
@@ -151,7 +183,33 @@ export default function GoalDetailPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-4">
-      <TopBar title={modeLabel(goal.mode)} onBack transparent />
+      <TopBar
+        title={modeLabel(goal.mode)}
+        onBack
+        transparent
+        right={
+          iAmIn ? (
+            <div className="flex items-center gap-2">
+              {iAmOwner && isGroupCommitment && (
+                <button
+                  onClick={() => setInviteSheetOpen(true)}
+                  aria-label="Invite people"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/6 text-chalk-100"
+                >
+                  <IconUserPlus className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                onClick={share}
+                aria-label="Share"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/6 text-chalk-100"
+              >
+                {shareState === "copied" ? <IconCheck className="h-4 w-4 text-volt-400" /> : <IconShare className="h-4 w-4" />}
+              </button>
+            </div>
+          ) : null
+        }
+      />
 
       <div className="px-5">
         <div
@@ -457,10 +515,25 @@ export default function GoalDetailPage() {
           {relatedPosts.length > 0 ? (
             relatedPosts.map((post) => {
               const canConfirm = isGroupCommitment && post.userId !== "me";
+              const confirmCount = post.reactions.find((r) => r.emoji === "\u{2705}")?.userIds.length ?? 0;
               const iConfirmed = post.reactions.some((r) => r.emoji === "\u{2705}" && r.userIds.includes("me"));
               return (
                 <div key={post.id} className="flex flex-col gap-2">
                   <FeedPostCard post={post} />
+                  {(post.imageUrl || confirmCount > 0) && (
+                    <div className="flex flex-wrap items-center gap-1.5 px-1">
+                      {post.imageUrl && (
+                        <span className="inline-flex items-center gap-1 rounded-pill bg-white/6 px-2.5 py-1 text-[11px] font-semibold text-chalk-500">
+                          {"\u{1F4F8}"} Proof attached
+                        </span>
+                      )}
+                      {confirmCount > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-pill bg-volt-500/10 px-2.5 py-1 text-[11px] font-semibold text-volt-400">
+                          {"\u{2705}"} Confirmed by {confirmCount}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {canConfirm && (
                     <button
                       onClick={() => confirmCheckIn(post.id)}
@@ -548,6 +621,54 @@ export default function GoalDetailPage() {
               {checkingIn ? "Checking in…" : needsNumericLog ? "Log entry" : "Check in"}
             </Button>
             <Button onClick={() => setLogModalOpen(false)} variant="ghost" size="md" className="w-full">
+              Cancel
+            </Button>
+          </div>
+        </BottomSheet>
+      )}
+
+      {inviteSheetOpen && (
+        <BottomSheet onClose={() => setInviteSheetOpen(false)}>
+          <p className="text-center font-display text-lg text-chalk-100">Invite people</p>
+          <p className="mt-1 text-center text-sm text-chalk-500">{goal.title}</p>
+          <div className="mt-5 flex max-h-72 flex-col gap-2 overflow-y-auto">
+            {notInvited.length > 0 ? (
+              notInvited.map((u) => {
+                const selected = selectedInviteeIds.includes(u.id);
+                return (
+                  <button
+                    key={u.id}
+                    onClick={() => toggleInvitee(u.id)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-colors",
+                      selected ? "border-volt-500/40 bg-volt-500/10" : "border-white/8 bg-white/5"
+                    )}
+                  >
+                    <Avatar initials={u.avatarInitials} gradient={u.avatarColor} size={36} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-chalk-100">{u.name}</p>
+                      <p className="text-xs text-chalk-500">@{u.handle}</p>
+                    </div>
+                    <div
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border",
+                        selected ? "border-volt-500 bg-volt-500 text-ink-950" : "border-white/20"
+                      )}
+                    >
+                      {selected && "✓"}
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <p className="py-6 text-center text-sm text-chalk-500">Everyone&apos;s already in.</p>
+            )}
+          </div>
+          <div className="mt-5 flex flex-col gap-2.5">
+            <Button onClick={submitInvite} disabled={inviting || selectedInviteeIds.length === 0} variant="volt" size="md" className="w-full">
+              {inviting ? "Inviting…" : selectedInviteeIds.length > 0 ? `Invite ${selectedInviteeIds.length}` : "Invite"}
+            </Button>
+            <Button onClick={() => setInviteSheetOpen(false)} variant="ghost" size="md" className="w-full">
               Cancel
             </Button>
           </div>

@@ -96,6 +96,8 @@ export interface Goal {
   progress: number; // 0-100 aggregate
   participants: GoalParticipant[];
   streak: number;
+  /** All-time longest streak this goal has reached — unlike `streak`, this never resets on a miss. */
+  bestStreak: number;
   coverGradient: string;
   /** How progress is tracked for this goal. Every goal has one — "binary" is the plain tap-to-log default. */
   metric: GoalMetric;

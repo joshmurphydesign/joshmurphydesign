@@ -80,5 +80,17 @@ export async function POST(request: Request) {
     },
   });
 
+  if (p.inviteeIds.length) {
+    await db.notification.createMany({
+      data: p.inviteeIds.map((inviteeId) => ({
+        userId: inviteeId,
+        type: "rally-invite",
+        actorId: me.id,
+        message: `${me.name} invited you to join "${p.title}".`,
+        createdAt: now,
+      })),
+    });
+  }
+
   return NextResponse.json({ goal: serializeGoal(goal), activity: serializeActivity(activity) });
 }

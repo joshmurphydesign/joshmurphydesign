@@ -154,6 +154,25 @@ export function IconCamera(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconShare(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 15V4M8 8l4-4 4 4" />
+      <path d="M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13" />
+    </svg>
+  );
+}
+
+export function IconUserPlus(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9.5" cy="8.5" r="3.5" />
+      <path d="M3.5 20a6 6 0 0 1 12 0" />
+      <path d="M18 8v6M15 11h6" />
+    </svg>
+  );
+}
+
 export function IconX(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" {...props}>

@@ -12,6 +12,7 @@ import { useAuth } from "./auth-context";
 import { isStepsGoal } from "./metric-presets";
 import { COMPETITIONS, POWER_PLAYS } from "./mock-data";
 import { normalizeActivity, normalizeGoal, normalizeMessage, normalizeNotification, normalizePost } from "./normalize";
+import { computeStreakRiskReminders } from "./reminders";
 import type {
   ActivityHistoryItem,
   Competition,
@@ -64,6 +65,7 @@ interface DataContextValue {
   toggleReaction: (postId: string, emoji: string) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<void>;
   joinGoal: (goalId: string, startValue?: number) => Promise<void>;
+  inviteToGoal: (goalId: string, inviteeIds: string[]) => Promise<void>;
   joinPowerPlay: (powerPlayId: string) => void;
   createGoal: (params: {
     title: string;
@@ -211,6 +213,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ startValue }),
+    });
+    const data = await parseJson<{ goal?: Goal }>(res);
+    if (data.goal && userId) {
+      const goal = normalizeGoal(data.goal, userId);
+      setGoals((prev) => prev.map((g) => (g.id === goalId ? goal : g)));
+    }
+  }, [userId]);
+
+  const inviteToGoal = useCallback(async (goalId: string, inviteeIds: string[]) => {
+    const res = await fetch(`/api/goals/${goalId}/invite`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inviteeIds }),
     });
     const data = await parseJson<{ goal?: Goal }>(res);
     if (data.goal && userId) {
@@ -467,13 +482,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       .sort((a, b) => new Date(b.lastMessage.createdAt).getTime() - new Date(a.lastMessage.createdAt).getTime());
   }, [messages, threadReads]);
 
+  // Streak-risk reminders are computed fresh from live goal state, not persisted —
+  // there's no push/cron infrastructure to trigger them any other way, so they're
+  // recomputed every render and naturally disappear the moment a check-in lands.
+  const mergedNotifications = useMemo(() => {
+    const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === "me"));
+    return [...computeStreakRiskReminders(myGoals), ...notifications];
+  }, [goals, notifications]);
+
   const value = useMemo<DataContextValue>(
     () => ({
       goals,
       posts,
       competitions: COMPETITIONS,
       powerPlays,
-      notifications,
+      notifications: mergedNotifications,
       activity,
       messages,
       following,
@@ -483,6 +506,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       toggleReaction,
       addComment,
       joinGoal,
+      inviteToGoal,
       joinPowerPlay,
       createGoal,
       markNotificationsRead,
@@ -503,7 +527,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       goals,
       posts,
       powerPlays,
-      notifications,
+      mergedNotifications,
       activity,
       messages,
       following,
@@ -514,6 +538,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       toggleReaction,
       addComment,
       joinGoal,
+      inviteToGoal,
       joinPowerPlay,
       createGoal,
       markNotificationsRead,

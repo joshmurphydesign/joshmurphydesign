@@ -81,6 +81,7 @@ export function serializeGoal(g: DbGoal & { participants: DbGoalParticipant[] })
     progress: g.progress,
     participants: g.participants.map(serializeParticipant),
     streak: g.streak,
+    bestStreak: g.bestStreak,
     coverGradient: g.coverGradient,
     metric: { type: g.metricType as MetricType, targetValue: g.metricTargetValue },
     stake: g.stake ?? undefined,
