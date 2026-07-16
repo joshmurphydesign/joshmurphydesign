@@ -11,6 +11,7 @@ import { GroupRoster } from "@/components/goal/GroupRoster";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { IconCamera, IconMessage } from "@/components/ui/Icons";
 import { metricIsEntryBased } from "@/lib/metric-presets";
+import { byImportance } from "@/lib/feed-ranking";
 
 export default function GroupsPage() {
   const { goals, posts, threads } = useData();
@@ -24,11 +25,10 @@ export default function GroupsPage() {
     [myGoals]
   );
   const myGoalIds = useMemo(() => new Set(myGoals.map((g) => g.id)), [myGoals]);
-  const activity = useMemo(
-    () =>
-      [...posts]
-        .filter((p) => p.goalId && myGoalIds.has(p.goalId))
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  // Highlights, not a chronological log: importance (wins, streak milestones) blended
+  // with recency, so the moments that matter don't get buried under routine check-ins.
+  const highlights = useMemo(
+    () => [...posts].filter((p) => p.goalId && myGoalIds.has(p.goalId)).sort(byImportance),
     [posts, myGoalIds]
   );
   const hasUnreadThreads = threads.some((t) => t.unread);
@@ -39,7 +39,7 @@ export default function GroupsPage() {
         title="Groups"
         right={
           <div className="flex items-center gap-2">
-            <HeaderIconLink href="/feed/new" icon={<IconCamera className="h-5 w-5" />} label="New update" />
+            <HeaderIconLink href="/feed/new" icon={<IconCamera className="h-5 w-5" />} label="Share a highlight" />
             <HeaderIconLink
               href="/messages"
               icon={<IconMessage className="h-5 w-5" />}
@@ -71,13 +71,13 @@ export default function GroupsPage() {
       )}
 
       <section className="flex flex-col gap-3">
-        <SectionHeader title="Activity" subtitle="Check-ins from your commitments" />
+        <SectionHeader title="Highlights" subtitle="Wins, streaks, and proof from your groups" />
         <div className="flex flex-col gap-3 px-5">
-          {activity.length > 0 ? (
-            activity.map((post) => <FeedPostCard key={post.id} post={post} />)
+          {highlights.length > 0 ? (
+            highlights.map((post) => <FeedPostCard key={post.id} post={post} />)
           ) : (
             <p className="py-10 text-center text-sm text-chalk-500">
-              No activity yet. Check in on a commitment to get things moving.
+              No highlights yet. Check in on a commitment to get things moving.
             </p>
           )}
         </div>

@@ -6,6 +6,7 @@ import type { Post } from "@/lib/types";
 import { useResolvedUser } from "@/lib/people";
 import { useData } from "@/lib/data-context";
 import { categoryEmoji, cn, timeAgo } from "@/lib/utils";
+import { isHighlight } from "@/lib/feed-ranking";
 import { Avatar } from "@/components/ui/Avatar";
 import { Pill } from "@/components/ui/Pill";
 import { ReactionBar } from "./ReactionBar";
@@ -42,6 +43,7 @@ export function FeedPostCard({ post }: { post: Post }) {
 
   const linkedGoal = post.goalId ? goals.find((g) => g.id === post.goalId) : undefined;
   const iCheered = post.reactions.some((r) => r.emoji === CHEER_EMOJI && r.userIds.includes("me"));
+  const highlight = isHighlight(post);
 
   const submitComment = () => {
     const text = draft.trim();
@@ -61,7 +63,12 @@ export function FeedPostCard({ post }: { post: Post }) {
   };
 
   return (
-    <article className="card-surface animate-rise overflow-hidden rounded-[var(--radius-card)]">
+    <article
+      className={cn(
+        "card-surface animate-rise overflow-hidden rounded-[var(--radius-card)]",
+        highlight && "ring-1 ring-volt-500/30 shadow-[var(--shadow-glow-volt)]"
+      )}
+    >
       <div className="flex items-center justify-between p-4 pb-0">
         <Link href={author.id === "me" ? "/profile" : `/profile/${author.id}`} className="flex items-center gap-3">
           <Avatar initials={author.avatarInitials} gradient={author.avatarColor} size={38} />
@@ -72,7 +79,10 @@ export function FeedPostCard({ post }: { post: Post }) {
             </p>
           </div>
         </Link>
-        <Pill tone={TYPE_TONE[post.type]}>{TYPE_LABEL[post.type]}</Pill>
+        <Pill tone={TYPE_TONE[post.type]}>
+          {highlight && "\u{2728} "}
+          {TYPE_LABEL[post.type]}
+        </Pill>
       </div>
 
       {post.imageUrl && (

@@ -9,9 +9,11 @@ import { HeaderIconLink } from "@/components/shell/HeaderIconLink";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { GoalCard } from "@/components/goal/GoalCard";
 import { GroupRoster } from "@/components/goal/GroupRoster";
+import { FeedPostCard } from "@/components/feed/FeedPostCard";
 import { IconCheck, IconMessage } from "@/components/ui/Icons";
 import { checkInStatus } from "@/lib/streak-status";
 import { metricIsEntryBased } from "@/lib/metric-presets";
+import { byImportance } from "@/lib/feed-ranking";
 import { cn } from "@/lib/utils";
 
 function greeting(): string {
@@ -24,13 +26,18 @@ function greeting(): string {
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { goals, threads, logProgress } = useData();
+  const { goals, posts, threads, logProgress } = useData();
 
   if (!user) return null;
 
   const hasUnreadThreads = threads.some((t) => t.unread);
 
   const myGoals = goals.filter((g) => g.participants.some((p) => p.userId === "me"));
+  const myGoalIds = new Set(myGoals.map((g) => g.id));
+  const latestHighlights = [...posts]
+    .filter((p) => p.goalId && myGoalIds.has(p.goalId))
+    .sort(byImportance)
+    .slice(0, 2);
   // The streak/check-in loop only applies to daily-obligation commitments (binary
   // check-ins and cumulative running totals both carry a real day-streak). Entry-based
   // goals (a PR you're chasing) still show in the list below, but attempts happen
@@ -159,6 +166,17 @@ export default function HomePage() {
                   <GroupRoster participants={goal.participants} size={36} />
                 </div>
               </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {latestHighlights.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <SectionHeader title="Latest highlights" subtitle="Wins and streaks from your groups" href="/feed" hrefLabel="See all" />
+          <div className="flex flex-col gap-3 px-5">
+            {latestHighlights.map((post) => (
+              <FeedPostCard key={post.id} post={post} />
             ))}
           </div>
         </section>

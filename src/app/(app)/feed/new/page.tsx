@@ -10,7 +10,7 @@ import { categoryEmoji, cn, resizeImageFile } from "@/lib/utils";
 
 export default function NewPostPage() {
   return (
-    <Suspense fallback={<TopBar title="New Post" onBack />}>
+    <Suspense fallback={<TopBar title="Share a Highlight" onBack />}>
       <ComposerScreen />
     </Suspense>
   );
@@ -33,7 +33,9 @@ function ComposerScreen() {
   const attachedGoal = goalId ? goals.find((g) => g.id === goalId) : undefined;
   const me = attachedGoal?.participants.find((p) => p.userId === "me");
 
-  const canPost = (caption.trim().length > 0 || !!imageUrl) && !posting;
+  // A highlight always ties back to a commitment — that's what keeps the feed
+  // high-signal instead of turning into general-purpose posting.
+  const canPost = !!goalId && (caption.trim().length > 0 || !!imageUrl) && !posting;
 
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
@@ -60,7 +62,7 @@ function ComposerScreen() {
   return (
     <div className="flex flex-col gap-5 pb-4">
       <TopBar
-        title="New Post"
+        title="Share a Highlight"
         onBack
         right={
           <Button onClick={submit} disabled={!canPost} variant="volt" size="sm">
@@ -115,7 +117,7 @@ function ComposerScreen() {
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
-          placeholder="Write a caption..."
+          placeholder="What's the highlight?"
           rows={3}
           className="w-full resize-none rounded-2xl border border-white/8 bg-white/5 px-4 py-3.5 text-[15px] text-chalk-100 outline-none placeholder:text-chalk-700 focus:border-ascend-blue"
         />
@@ -123,10 +125,12 @@ function ComposerScreen() {
 
       <div className="flex flex-col gap-2.5 px-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-chalk-500">
-          Link a goal, challenge, or checkpoint
+          Which commitment is this? <span className="text-chalk-700">(required)</span>
         </p>
         {myGoals.length === 0 ? (
-          <p className="text-xs text-chalk-700">Join a goal to tag your progress on it.</p>
+          <p className="text-xs text-chalk-700">
+            Highlights always tie back to a commitment — join or start one first.
+          </p>
         ) : (
           <div className="flex gap-2 overflow-x-auto pb-1">
             {myGoals.map((g) => {

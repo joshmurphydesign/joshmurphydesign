@@ -390,7 +390,7 @@ export default function GoalDetailPage() {
                 href={`/feed/new?goalId=${goal.id}`}
                 className="inline-flex items-center justify-center gap-2 rounded-pill border border-white/15 px-5 py-3 text-sm font-semibold text-chalk-100 transition-transform active:scale-[0.97]"
               >
-                <IconCamera className="h-4 w-4" /> Share a photo update
+                <IconCamera className="h-4 w-4" /> Share a highlight
               </Link>
             </div>
           ) : (
